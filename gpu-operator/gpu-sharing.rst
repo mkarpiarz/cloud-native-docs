@@ -9,9 +9,48 @@
 Time-Slicing GPUs in Kubernetes
 ###############################
 
-************
-Introduction
-************
+
+*******************************
+Understanding Time-Slicing GPUs
+*******************************
+
+The NVIDIA GPU Operator enables oversubscription of GPUs through a set
+of extended options for the `NVIDIA Kubernetes Device Plugin <https://catalog.ngc.nvidia.com/orgs/nvidia/containers/k8s-device-plugin>`_.
+GPU time-slicing enables workloads that are scheduled on oversubscribed GPUs to
+interleave with one another.
+
+This mechanism for enabling *time-slicing* of
+GPUs in Kubernetes enables a system administrator to define a set of
+*replicas* for a GPU, each of which can be handed out independently to a
+pod to run workloads on. Unlike Multi-Instance GPU (MIG), there is no memory or
+fault-isolation between replicas, but for some workloads this is better
+than not being able to share at all. Internally, GPU
+time-slicing is used to multiplex workloads from
+replicas of the same underlying GPU.
+
+.. note::
+
+    A typical resource request provides exclusive access to GPUs.
+    A request for a time-sliced GPU provides shared access.
+    A request for more than one time-sliced GPU does not guarantee that the pod
+    receives access to a proportional amount of GPU compute power.
+
+    A request for more than one time-sliced GPU only specifies that the pod
+    receives access to a GPU that is shared by other pods.
+    Each pod can run as many processes on the underlying GPU without a limit.
+    The GPU simply provides an equal share of time to all GPU processes, across
+    all of the pods.
+
+You can apply a cluster-wide default time-slicing configuration.
+You can also apply node-specific configurations.
+For example, you can apply a time-slicing configuration to nodes with Tesla-T4 GPUs only
+and not modify nodes with other GPU models.
+
+You can combine the two approaches by applying a cluster-wide default configuration
+and then label nodes so that those nodes receive a node-specific configuration.
+
+Comparison: Time-Slicing and Multi-Instance GPU
+===============================================
 
 The latest generations of NVIDIA GPUs provide an operation mode called
 Multi-Instance GPU, or MIG. MIG allows you to partition a GPU
@@ -23,400 +62,535 @@ these predefined instances instead of the full native GPU.
 MIG support was added to Kubernetes in 2020. Refer to `Supporting MIG in Kubernetes <https://www.google.com/url?q=https://docs.google.com/document/d/1mdgMQ8g7WmaI_XVVRrCvHPFPOMCm5LQD5JefgAh6N8g/edit&sa=D&source=editors&ust=1655578433019961&usg=AOvVaw1F-OezvM-Svwr1lLsdQmu3>`_
 for details on how this works.
 
-What if you don't need the memory and fault-isolation provided by
-MIG? What if you're willing to trade the isolation provided by MIG for
-the ability to share a GPU by a larger number of users. Or what if you don't 
-have access to a GPU that supports MIG? Should they not be able
-to provide shared access to their GPUs so long as memory and
-fault-isolation are not a concern?
+Time-slicing trades the memory and fault-isolation that is provided by MIG
+for the ability to share a GPU by a larger number of users.
+Time-slicing also provides a way to provide shared access to a GPU for
+older generation GPUs that do not support MIG.
 
-The NVIDIA GPU Operator allows oversubscription of GPUs through a set 
-of extended options for the `NVIDIA Kubernetes Device Plugin <https://catalog.ngc.nvidia.com/orgs/nvidia/containers/k8s-device-plugin>`_.
-Internally, GPU time-slicing is used to allow workloads that land 
-on oversubscribed GPUs to interleave with one another. This page covers 
-ways to enable this in Kubernetes using the GPU Operator.
 
-This mechanism for enabling “time-sharing” of
-GPUs in Kubernetes allows a system administrator to define a set of
-“replicas” for a GPU, each of which can be handed out independently to a
-pod to run workloads on. Unlike MIG, there is no memory or
-fault-isolation between replicas, but for some workloads this is better
-than not being able to share at all. Internally, GPU
-time-slicing is used to multiplex workloads from
-replicas of the same underlying GPU.
+Support Platforms and Resource Types
+====================================
 
-GPU time-slicing can be used with bare-metal applications, virtual machines 
+GPU time-slicing can be used with bare-metal applications, virtual machines
 with GPU passthrough, and virtual machines with NVIDIA vGPU.
-The following sections describe how to make use of the GPU
-time-slicing feature in Kubernetes.
+
+Currently, the only supported resource types are ``nvidia.com/gpu``
+and any of the resource types that emerge from configuring a node with
+the mixed MIG strategy.
+
+The following table identifies the time-sliceable resources by product type.
+
+.. list-table::
+   :header-rows: 1
+
+   * - Tesla-T4
+     - A100 40GB
+     - A100 80GB
+   * - * ``nvidia.com/gpu``
+     - * ``nvidia.com/gpu``
+       * ``nvidia.com/mig-1g.5gb``
+       * ``nvidia.com/mig-2g.10gb``
+       * ``nvidia.com/mig-3g.20gb``
+       * ``nvidia.com/mig-7g.40gb``
+     - * ``nvidia.com/gpu``
+       * ``nvidia.com/mig-1g.10gb``
+       * ``nvidia.com/mig-2g.20gb``
+       * ``nvidia.com/mig-3g.40gb``
+       * ``nvidia.com/mig-7g.80gb``
+
+Changes to Node Labels
+======================
+
+In addition to the standard node labels that the GPU Feature Discovery Plugin (GFD)
+applies to nodes, the following label is also applied after you configure
+GPU time-slicing for a node:
+
+.. code-block:: yaml
+
+   nvidia.com/<resource-name>.replicas = <replicas-count>
+
+Where ``<replicas-count>`` is the factor by which each resource of ``<resource-name>`` is oversubscribed.
+
+Additionally, by default, the ``nvidia.com/<resource-name>.product`` label is modified:
+
+.. code-block:: yaml
+
+    nvidia.com/<resource-name>.product = <product-name>-SHARED
+
+Using these labels, you can request time-sliced access to a GPU or exclusive access to a GPU
+in the same way that you traditionally specify a node selector to request one GPU model over another.
+That is, the ``-SHARED`` product name suffix ensures that you can specify a
+node selector to assign pods to nodes with time-sliced GPUs.
+
+When ``renameByDefault=false`` and ``migStrategy=single``, both the MIG profile name
+and the ``-SHARED`` suffix are appended to the product name. Refer to the following example:
+
+.. code-block:: yaml
+
+    nvidia.com/gpu.product = A100-SXM4-40GB-MIG-1g.5gb-SHARED
 
 
 *************
 Configuration
 *************
 
-Configuration for Shared Access to GPUs with GPU Time-Slicing
-=============================================================
+About Configuring GPU Time-Slicing
+==================================
 
-You can provide time-slicing configurations for the NVIDIA Kubernetes Device Plugin as a ``ConfigMap``:
+You configure GPU time-slicing by performing the following high-level steps:
 
-.. code-block:: yaml
+* Add a config map to the namespace that is used by the GPU operator.
+* Configure the cluster policy so that the device plugin uses the config map.
+* Apply a label to the nodes that you want to configure for GPU time-slicing.
 
-    version: v1
-    sharing:
-      timeSlicing:
-        renameByDefault: <bool>
-        failRequestsGreaterThanOne: <bool>
-        resources:
-        - name: <resource-name>
-          replicas: <num-replicas>
-        ...
+On a machine with one GPU, the following config map configures Kubernetes so that
+the node advertises four GPU resources.
+A machine with two GPUs advertises eight GPUs, and so on.
 
-For each named resource under ``sharing.timeSlicing.resources``, a number of 
-replicas can be specified for that resource type. These replicas represent 
-the number of shared accesses that will be granted for a GPU represented by that resource type.
-If ``renameByDefault=true``, then each resource will be advertised under the 
-name ``<resource-name>.shared`` instead of simply ``<resource-name>``.
-If ``failRequestsGreaterThanOne=true``, then the plugin will fail to allocate 
-any shared resources to a container if they request more than one. The 
-container’s pod will fail with an ``UnexpectedAdmissionError`` and must then be manually 
-deleted, updated, and redeployed.
-
-.. note::
-
-    Unlike with "normal" GPU requests, requesting more than one shared GPU 
-    does not guarantee that you will get
-    access to a proportional amount of compute power. It only specifies that 
-    you will get access to a GPU that is shared
-    by other clients, each of which has the freedom to run as many processes 
-    on the underlying GPU as they want. 
-    Internally, the GPU will simply give an equal share of time to 
-    all GPU processes across all of the clients. 
-    The ``failRequestsGreaterThanOne`` flag is meant to help users 
-    understand this subtlety, by treating a request of 1 as an 
-    access request rather than an exclusive resource request. Setting 
-    ``failRequestsGreaterThanOne=true`` is recommended,
-    but it is set to ``false`` by default to retain backwards compatibility.
-
-You can specify multiple configurations in a ``ConfigMap`` as in the following 
-example.
+.. rubric:: Sample Config Map
 
 .. code-block:: yaml
 
-    cat << EOF >> time-slicing-config.yaml
     apiVersion: v1
     kind: ConfigMap
     metadata:
       name: time-slicing-config
       namespace: gpu-operator
     data:
-        a100-40gb: |-
-            version: v1
-            sharing:
-              timeSlicing:
-                resources:
-                - name: nvidia.com/gpu
-                  replicas: 8
-                - name: nvidia.com/mig-1g.5gb
-                  replicas: 2
-                - name: nvidia.com/mig-2g.10gb
-                  replicas: 2
-                - name: nvidia.com/mig-3g.20gb
-                  replicas: 3
-                - name: nvidia.com/mig-7g.40gb
-                  replicas: 7
-        tesla-t4: |-
-            version: v1
-            sharing:
-              timeSlicing:
-                resources:
-                - name: nvidia.com/gpu
-                  replicas: 4
-    EOF
+      any: |-
+        version: v1
+        sharing:
+          timeSlicing:
+            renameByDefault: false
+            failRequestsGreaterThanOne: false
+            resources:
+              - name: nvidia.com/gpu
+                replicas: 4
 
-Create a ``ConfigMap`` in the operator namespace. In this example, it is ``gpu-operator``:
+The following table describes the key fields in the config map.
 
-.. code-block:: console
+.. list-table::
+   :header-rows: 1
+   :widths: 15 10 75
 
-    $ kubectl create namespace gpu-operator
+   * - Field
+     - Type
+     - Description
+   * - ``data.<key>``
+     - string
+     - Specifies the time-slicing configuration name.
 
-.. code-block:: console
+       You can specify multiple configurations if you want to assign node-specific configurations.
+   * - ``renameByDefault``
+     - boolean
+     - When set to ``true``, each resource is advertised under the name ``<resource-name>.shared``
+       instead of ``<resource-name>``.
 
-    $ kubectl create -f time-slicing-config.yaml
+       For example, if this field is set to ``true`` and the resource is typically ``nvidia.com/gpu``,
+       the nodes that are configured for time-sliced GPU access then advertise the resource as
+       ``nvidia.com/gpu.shared``.
+       Setting this field to true can be helpful if you want to schedule pods on GPUs with shared
+       access by specifying ``<resource-name>.shared`` in the resource request.
 
+       When this field is set to ``false``, the advertised resource name, such as ``nvidia.com/gpu``,
+       is not modified.
+       However, label for the product name is suffixed with ``-SHARED``.
+       For example, if the output of ``kubectl describe node`` shows the node label
+       ``nvidia.com/gpu.product=Tesla-T4``, then after the node is configured for time-sliced
+       GPU access, the label becomes ``nvidia.com/gpu.product=Tesla-T4-SHARED``.
+       In this case, you can specify a node selector that includes the ``-SHARED`` suffix to
+       schedule pods on GPUs with shared access.
 
-Enabling Shared Access to GPUs with the NVIDIA GPU Operator
-===========================================================
+       The default value is ``false``.
+   * - ``failRequestsGreaterThanOne``
+     - boolean
+     - The purpose of this field is to enforce awareness that requesting more than one GPU replica does not
+       result in receiving more proportional access to the GPU.
 
-You can enable time-slicing with the NVIDIA GPU Operator by passing the
-``devicePlugin.config.name=<config-map-name>`` parameter, 
-where ``<config-map-name>``
-is the name of the ``ConfigMap`` created for the time-slicing 
-configuration as described in the previous section.
+       For example, if ``4`` GPU replicas are available and two pods request ``1`` GPU each and a third pod
+       requests ``2`` GPUs, the applications in the three pods have an equal share of GPU compute time.
+       Specifically, the pod that requests ``2`` GPUs does not receive twice as much compute time as the pods
+       that request ``1`` GPU.
 
-During fresh install of the NVIDIA GPU Operator with time-slicing enabled (e.g. ``time-slicing-config``):
-
-.. code-block:: console
-
-    $ helm install gpu-operator nvidia/gpu-operator \
-         -n gpu-operator \
-         --set devicePlugin.config.name=time-slicing-config
-
-For dynamically enabling time-slicing with GPU Operator already installed:
-
-.. code-block:: console
-
-    $ kubectl patch clusterpolicy/cluster-policy \
-       -n gpu-operator --type merge \
-       -p '{"spec": {"devicePlugin": {"config": {"name": "time-slicing-config"}}}}'
-
-Applying the Default Configuration Across the Cluster
-=====================================================
-
-The time-slicing configuration can be applied either at cluster level 
-or per node. By default, the GPU Operator will **not** apply the time-slicing
-configuration to any GPU node in the cluster. The user would have to 
-explicitly specify it with the ``devicePlugin.config.default=<config-name>`` parameter.
-
-Install the GPU Operator by passing the time-slicing ``ConfigMap`` name and the
-**default** configuration (e.g. a100-40gb):
-
-.. code-block:: console
-
-    $ kubectl patch clusterpolicy/cluster-policy \
-       -n gpu-operator --type merge \
-       -p '{"spec": {"devicePlugin": {"config": {"name": "time-slicing-config", "default": "a100-40gb"}}}}'
-
-Verify that the time-slicing configuration is applied successfully to all 
-GPU nodes in the cluster:
-
-.. code-block:: console
-
-    $ kubectl describe node <node-name>
-    ...
-    Capacity:
-    nvidia.com/gpu: 8
-    ...
-    Allocatable:
-    nvidia.com/gpu: 8
-    ...
-
-.. note::
-    In this example it is assumed that node ``<node-name>`` has one GPU.
+       When set to ``true``, a resource request for more than one GPU fails with an ``UnexpectedAdmissionError``.
+       In this case, you must manually delete the pod, update the resource request, and redeploy.
+   * - ``resources.name``
+     - string
+     - Specifies the resource type to make available with time-sliced access, such as ``nvidia.com/gpu``,
+       ``nvidia.com/mig-1g.5gb``, and so on.
+   * - ``resources.replicas``
+     - integer
+     - Specifies the number of time-sliced GPU replicas to make available for shared access to GPUs of the
+       specified resource type.
 
 
-Applying a Time-Slicing Configuration Per Node
+.. _time-slicing-cluster-wide-config:
+
+Applying One Cluster-Wide Configuration
+=======================================
+
+Perform the following steps to configure GPU time-slicing if you already installed the GPU operator
+and want to apply the same time-slicing configuration on all nodes in the cluster.
+
+#. Create a file, such as ``time-slicing-config-all.yaml`` with contents like the following example:
+
+   .. code-block:: yaml
+
+      apiVersion: v1
+      kind: ConfigMap
+      metadata:
+        name: time-slicing-config-all
+        namespace: gpu-operator
+      data:
+        any: |-
+          version: v1
+          sharing:
+            timeSlicing:
+              resources:
+              - name: nvidia.com/gpu
+                replicas: 4
+
+#. Add the config map to the same namespace as the GPU operator:
+
+   .. code-block:: console
+
+      $ kubectl create -f time-slicing-config-all.yaml
+
+#. Configure the device plugin with the config map and set the default time-slicing configuration:
+
+   .. code-block:: console
+
+      $ kubectl patch clusterpolicy/cluster-policy \
+          -n gpu-operator --type merge \
+          -p '{"spec": {"devicePlugin": {"config": {"name": "time-slicing-config-all", "default": "any"}}}}'
+
+#. (Optional) Confirm that the ``gpu-feature-discovery`` and
+   ``nvidia-device-plugin-daemonset`` pods restart.
+
+   .. code-block:: console
+
+      $ kubectl get events -n gpu-operator --sort-by='.lastTimestamp'
+
+   *Example Output*
+
+   .. code-block:: console
+
+      11s         Normal   Started            pod/gpu-feature-discovery-747w2            Started container config-manager-init
+      10s         Normal   Started            pod/gpu-feature-discovery-747w2            Started container gpu-feature-discovery
+      10s         Normal   Pulled             pod/gpu-feature-discovery-747w2            Container image "nvcr.io/nvidia/k8s-device-plugin:v0.13.0-ubi8" already present on machine
+      10s         Normal   Created            pod/gpu-feature-discovery-747w2            Created container config-manager
+      10s         Normal   Started            pod/gpu-feature-discovery-747w2            Started container config-manager
+      10s         Normal   Started            pod/nvidia-device-plugin-daemonset-ptw8g   Started container nvidia-device-plugin
+      10s         Normal   Pulled             pod/nvidia-device-plugin-daemonset-ptw8g   Container image "nvcr.io/nvidia/k8s-device-plugin:v0.13.0-ubi8" already present on machine
+      10s         Normal   Created            pod/nvidia-device-plugin-daemonset-ptw8g   Created container config-manager
+      10s         Normal   Started            pod/nvidia-device-plugin-daemonset-ptw8g   Started container config-manager
+
+Refer to :ref:`time-slicing-verify`.
+
+.. _time-slicing-node-specific-config:
+
+Applying Multiple Node-Specific Configurations
 ==============================================
 
-To enable a time-slicing configuration per node, the user would need to 
-apply the ``nvidia.com/device-plugin.config=<config-name>`` node label after 
-installing the GPU Operator. On applying this label, the
-NVIDIA Kubernetes Device Plugin will configure node GPU resources accordingly.
+An alternative to applying one cluster-wide configuration is to specify multiple
+time-slicing configurations in the config map and to apply labels node-by-node to
+control which configuration is applied to which nodes.
 
-Install the GPU Operator by passing a time-slicing ``ConfigMap``:
+#. Create a file, such as ``time-slicing-config-fine.yaml``, with contents like the following example:
 
-.. code-block:: console
+   .. code-block:: yaml
 
-    $ helm install gpu-operator nvidia/gpu-operator \
-         -n gpu-operator \
-         --set devicePlugin.config.name=time-slicing-config
+       apiVersion: v1
+       kind: ConfigMap
+       metadata:
+         name: time-slicing-config-fine
+         namespace: gpu-operator
+       data:
+         a100-40gb: |-
+           version: v1
+           sharing:
+             timeSlicing:
+               resources:
+               - name: nvidia.com/gpu
+                 replicas: 8
+               - name: nvidia.com/mig-1g.5gb
+                 replicas: 2
+               - name: nvidia.com/mig-2g.10gb
+                 replicas: 2
+               - name: nvidia.com/mig-3g.20gb
+                 replicas: 3
+               - name: nvidia.com/mig-7g.40gb
+                 replicas: 7
+         tesla-t4: |-
+           version: v1
+           sharing:
+             timeSlicing:
+               resources:
+               - name: nvidia.com/gpu
+                 replicas: 4
 
-Label the node with the required time-slicing configuration (e.g. ``a100-40gb``) in the ``ConfigMap``:
+#. Add the config map to the same namespace as the GPU operator:
 
-.. code-block:: console
+   .. code-block:: console
 
-    $ kubectl label node <node-name> nvidia.com/device-plugin.config=a100-40gb
+      $ kubectl create -f time-slicing-config-fine.yaml
 
-Verify that the time-slicing configuration is applied successfully:
+#. Configure the device plugin with the config map and set the default time-slicing configuration:
 
-.. code-block:: console
+   .. code-block:: console
 
-    $ kubectl describe node <node-name>
-    ...
-    Capacity:
-    nvidia.com/gpu: 8
-    ...
-    Allocatable:
-    nvidia.com/gpu: 8
-    ...
+      $ kubectl patch clusterpolicy/cluster-policy \
+          -n gpu-operator --type merge \
+          -p '{"spec": {"devicePlugin": {"config": {"name": "time-slicing-config-fine"}}}}'
 
-.. note::
-    In this example it is assumed that node ``<node-name>`` has one GPU.
+   Because the specification does not include the ``devicePlugin.config.default`` field,
+   when the device plugin pods redeploy, they do not automatically apply the time-slicing
+   configuration to all nodes.
 
+#. (Optional) Confirm that the ``gpu-feature-discovery`` and
+   ``nvidia-device-plugin-daemonset`` pods restart.
 
-Changes to Node Labels by the GPU Feature Discovery Plugin
-==========================================================
+   .. code-block:: console
 
-In addition to the standard node labels applied by the GPU Feature
-Discovery Plugin (GFD), the following label 
-is also included when deploying 
-the plugin with the time-slicing configurations described above.
+      $ kubectl get events -n gpu-operator --sort-by='.lastTimestamp'
 
-.. code-block:: text
+   *Example Output*
 
-    nvidia.com/<resource-name>.replicas = <num-replicas>
+   .. code-block:: console
 
-where ``<num-replicas>`` is the factor by which each resource of ``<resource-name>`` is oversubscribed.
+      11s         Normal   Started            pod/gpu-feature-discovery-747w2            Started container config-manager-init
+      10s         Normal   Started            pod/gpu-feature-discovery-747w2            Started container gpu-feature-discovery
+      10s         Normal   Pulled             pod/gpu-feature-discovery-747w2            Container image "nvcr.io/nvidia/k8s-device-plugin:v0.13.0-ubi8" already present on machine
+      10s         Normal   Created            pod/gpu-feature-discovery-747w2            Created container config-manager
+      10s         Normal   Started            pod/gpu-feature-discovery-747w2            Started container config-manager
+      10s         Normal   Started            pod/nvidia-device-plugin-daemonset-ptw8g   Started container nvidia-device-plugin
+      10s         Normal   Pulled             pod/nvidia-device-plugin-daemonset-ptw8g   Container image "nvcr.io/nvidia/k8s-device-plugin:v0.13.0-ubi8" already present on machine
+      10s         Normal   Created            pod/nvidia-device-plugin-daemonset-ptw8g   Created container config-manager
+      10s         Normal   Started            pod/nvidia-device-plugin-daemonset-ptw8g   Started container config-manager
 
-Additionally, ``nvidia.com/<resource-name>.product`` is modified as follows if ``renameByDefault=false``:
+#. Apply a label to the nodes by running one or more of the following commands:
 
-.. code-block:: text
+   * Apply a label to nodes one-by-one by specifying the node name:
 
-    nvidia.com/<resource-name>.product = <product name>-SHARED
+     .. code-block:: console
 
-Using these labels, you can select a shared vs. non-shared GPU 
-in the same way as traditionally 
-selecting one GPU model over another. That is, the ``SHARED`` annotation ensures that 
-the ``nodeSelector`` can be used to attract 
-pods to nodes with shared GPUs.
+        $ kubectl label node <node-name> nvidia.com/device-plugin.config=tesla-t4
 
-Because having ``renameByDefault=true`` already encodes the fact that the 
-resource is shared on the resource name,
-there is no need to annotate the product name with ``SHARED``. You can already 
-find needed shared resources by simply requesting it in the pod specification.
+   * Apply a label to several nodes at one time by specifying a label selector:
 
-When running with ``renameByDefault=false`` and ``migStrategy=single``,
-both the MIG profile name and the new ``SHARED`` annotation 
-are appended to the product name, like this:
+     .. code-block:: console
 
-.. code-block:: text
+        $ kubectl label node \
+            --selector=nvidia.com/gpu.product=Tesla-T4 \
+            nvidia.com/device-plugin.config=tesla-t4
 
-    nvidia.com/gpu.product = A100-SXM4-40GB-MIG-1g.5gb-SHARED
-
-Supported Resource Types
-========================
-
-Currently, the only supported resource types are ``nvidia.com/gpu`` 
-and any of the resource types that emerge from configuring a node with
-the mixed MIG strategy.
-
-For example, the full set of time-sliceable resources on a T4 card would
-be:
-
-.. code-block:: console
-
-      nvidia.com/gpu
-
-
-And the full set of time-sliceable resources on an A100 40GB card would be:
-
-.. code-block:: console
-
-      nvidia.com/gpu
-      nvidia.com/mig-1g.5gb
-      nvidia.com/mig-2g.10gb
-      nvidia.com/mig-3g.20gb
-      nvidia.com/mig-7g.40gb
+Refer to :ref:`time-slicing-verify`.
 
 
-Likewise, on an A100 80GB card, they would be:
+Configuring Time-Slicing Before Installing the NVIDIA GPU Operator
+==================================================================
 
-.. code-block:: console
+You can enable time-slicing with the NVIDIA GPU Operator by passing the
+``devicePlugin.config.name=<config-map-name>`` parameter during installation.
 
-      nvidia.com/gpu
-      nvidia.com/mig-1g.10gb
-      nvidia.com/mig-2g.20gb
-      nvidia.com/mig-3g.40gb
-      nvidia.com/mig-7g.80gb
+Perform the following steps to configure time-slicing before installing the operator:
 
-*****************************************************
-Testing GPU Time-Slicing with the NVIDIA GPU Operator
-*****************************************************
+#. Create the namespace for the operator:
 
-This section covers a workload test scenario to validate GPU time-slicing with GPU resources.
+   .. code-block::
 
-#. Create a workload test file ``plugin-test.yaml`` as follows:
+      $ kubectl create namespace gpu-operator
 
-.. code:: yaml
+#. Create a file, such as ``time-slicing-config.yaml``, with the config map contents.
 
-      apiVersion: apps/v1
-      kind: Deployment
-      metadata:
-        name: nvidia-plugin-test
-        labels:
-          app: nvidia-plugin-test
-      spec:
-        replicas: 5
-        selector:
-          matchLabels:
-            app: nvidia-plugin-test
-        template:
-          metadata:
-            labels:
-              app: nvidia-plugin-test
-          spec:
-            tolerations:
-              - key: nvidia.com/gpu
-                operator: Exists
-                effect: NoSchedule
-            containers:
-              - name: dcgmproftester11
-                image: nvidia/samples:dcgmproftester-2.0.10-cuda11.0-ubuntu18.04
-                command: ["/bin/sh", "-c"]
-                args:
-                  - while true; do /usr/bin/dcgmproftester11 --no-dcgm-validation -t 1004 -d 300; sleep 30; done
-                resources:
-                 limits:
-                   nvidia.com/gpu: 1
-                securityContext:
-                  capabilities:
-                    add: ["SYS_ADMIN"]
+   Refer to the :ref:`time-slicing-cluster-wide-config` or
+   :ref:`time-slicing-node-specific-config` sections.
 
-2. Create a deployment with multiple replicas:
+#. Add the config map to the same namespace as the GPU operator:
 
-.. code:: console
+   .. code-block:: console
 
-      kubectl apply -f plugin-test.yaml
+      $ kubectl create -f time-slicing-config.yaml
 
-3. Verify that all five replicas are running:
+#. Install the operator with Helm:
 
-.. code:: console
+   .. code-block:: console
 
-      kubectl get pods
-      kubectl exec <driver-pod-name> -n gpu-operator -- nvidia-smi
+      $ helm install gpu-operator nvidia/gpu-operator \
+          -n gpu-operator \
+          --set devicePlugin.config.name=time-slicing-config
 
-Your output should look something like this:
+#. Refer to either :ref:`time-slicing-cluster-wide-config` or
+   :ref:`time-slicing-node-specific-config` and perform the following tasks:
 
-.. code:: console
+   * Configure the device plugin by running the ``kubectl patch`` command.
+   * Apply labels to nodes if you added a config map with node-specific configurations.
 
-      NAME                                  READY   STATUS    RESTARTS   AGE
-      nvidia-plugin-test-8479c8f7c8-4tnsn   1/1     Running   0          6s
-      nvidia-plugin-test-8479c8f7c8-cdgdb   1/1     Running   0          6s
-      nvidia-plugin-test-8479c8f7c8-q2vn7   1/1     Running   0          6s
-      nvidia-plugin-test-8479c8f7c8-t9d4b   1/1     Running   0          6s
-      nvidia-plugin-test-8479c8f7c8-xggls   1/1     Running   0          6s
+After installation, refer to :ref:`time-slicing-verify`.
 
-.. code:: console
 
-      $ kubectl exec <driver-pod-name> -n gpu-operator -- nvidia-smi
+.. _time-slicing-verify:
 
-Your output should look something like this:
+********************************************
+Verifying the GPU Time-Slicing Configuration
+********************************************
 
-.. code:: console
+Perform the following steps to verify that the time-slicing configuration is applied successfully:
 
-      +-----------------------------------------------------------------------------+
-      | NVIDIA-SMI 510.73.08    Driver Version: 510.73.08    CUDA Version: 11.6     |
-      |-------------------------------+----------------------+----------------------+
-      | GPU  Name        Persistence-M| Bus-Id        Disp.A | Volatile Uncorr. ECC |
-      | Fan  Temp  Perf  Pwr:Usage/Cap|         Memory-Usage | GPU-Util  Compute M. |
-      |                               |                      |               MIG M. |
-      |===============================+======================+======================|
-      |   0  Tesla T4            On   | 00000000:00:1E.0 Off |                    0 |
-      | N/A   44C    P0    70W /  70W |   1577MiB / 15360MiB |    100%      Default |
-      |                               |                      |                  N/A |
-      +-------------------------------+----------------------+----------------------+
-                                                                                    
-      +-----------------------------------------------------------------------------+
-      | Processes:                                                                  |
-      |  GPU   GI   CI        PID   Type   Process name                  GPU Memory |
-      |        ID   ID                                                   Usage      |
-      |=============================================================================|
-      |    0   N/A  N/A      3666      C   /usr/bin/dcgmproftester11         315MiB |
-      |    0   N/A  N/A      3679      C   /usr/bin/dcgmproftester11         315MiB |
-      |    0   N/A  N/A      3992      C   /usr/bin/dcgmproftester11         315MiB |
-      |    0   N/A  N/A      4119      C   /usr/bin/dcgmproftester11         315MiB |
-      |    0   N/A  N/A      4324      C   /usr/bin/dcgmproftester11         315MiB |
-      +-----------------------------------------------------------------------------+
+#. Confirm that the node advertises additional GPU resources:
+
+   .. code-block:: console
+
+      $ kubectl describe node <node-name>
+
+   *Example Output*
+
+   The example output varies according to the GPU in your node and the configuration
+   that you apply.
+
+   The following output applies when ``renameByDefault`` is set to ``false``,
+   the default value.
+   The key considerations are as follows:
+
+   * The ``nvidia.com/gpu.count`` label reports the number of physical GPUs in the machine.
+   * The ``nvidia.com/gpu.product`` label includes a ``-SHARED`` suffix to the product name.
+   * The ``nvidia.com/gpu.replicas`` label matches the reported capacity.
+
+   .. code-block:: console
+      :emphasize-lines: 3,4,5,7
+
+      ...
+      Labels:
+                        nvidia.com/gpu.count=4
+                        nvidia.com/gpu.product=Tesla-T4-SHARED
+                        nvidia.com/gpu.replicas=4
+      Capacity:
+        nvidia.com/gpu: 16
+        ...
+      Allocatable:
+        nvidia.com/gpu: 16
+        ...
+
+   The following output applies when ``renameByDefault`` is set to ``true``.
+   The key considerations are as follows:
+
+   * The ``nvidia.com/gpu.count`` label reports the number of physical GPUs in the machine.
+   * The ``nvidia.com/gpu`` capacity reports ``0``.
+   * The ``nvidia.com/gpu.shared`` capacity equals the number of physical GPUs multiplied by the
+     specified number of GPU replicas to create.
+
+   .. code-block:: console
+      :emphasize-lines: 3,7,8
+
+      ...
+      Labels:
+                        nvidia.com/gpu.count=4
+                        nvidia.com/gpu.product=Tesla-T4
+                        nvidia.com/gpu.replicas=4
+      Capacity:
+        nvidia.com/gpu:        0
+        nvidia.com/gpu.shared: 16
+        ...
+      Allocatable:
+        nvidia.com/gpu:        0
+        nvidia.com/gpu.shared: 16
+        ...
+
+#. (Optional) Deploy a workload to validate GPU time-slicing:
+
+   * Create a file such as ``time-slicing-verification.yaml``, with the following contents:
+
+     .. code-block:: yaml
+
+        apiVersion: apps/v1
+        kind: Deployment
+        metadata:
+          name: time-slicing-verification
+          labels:
+            app: time-slicing-verification
+        spec:
+          replicas: 5
+          selector:
+            matchLabels:
+              app: time-slicing-verification
+          template:
+            metadata:
+              labels:
+                app: time-slicing-verification
+            spec:
+              tolerations:
+                - key: nvidia.com/gpu
+                  operator: Exists
+                  effect: NoSchedule
+              containers:
+                - name: dcgmproftester11
+                  image: nvidia/samples:dcgmproftester-2.1.7-cuda11.2.2-ubuntu20.04
+                  command: ["/bin/sh", "-c"]
+                  args:
+                    - while true; do /usr/bin/dcgmproftester11 --no-dcgm-validation -t 1004 -d 300; sleep 30; done
+                  resources:
+                   limits:
+                     nvidia.com/gpu: 1
+                  securityContext:
+                    capabilities:
+                      add: ["SYS_ADMIN"]
+
+   * Create the deployment with multiple replicas:
+
+     .. code-block:: console
+
+        $ kubectl apply -f time-slicing-verification.yaml
+
+   * Verify that all five replicas are running:
+
+     .. code-block:: console
+
+        $ kubectl get pods
+
+     *Example Output*
+
+     .. code-block:: console
+
+        NAME                                        READY   STATUS    RESTARTS   AGE
+        time-slicing-verification-7dcf94dff-54r4n   1/1     Running   0          15s
+        time-slicing-verification-7dcf94dff-bznd2   1/1     Running   0          15s
+        time-slicing-verification-7dcf94dff-gjd8n   1/1     Running   0          15s
+        time-slicing-verification-7dcf94dff-jqcld   1/1     Running   0          15s
+        time-slicing-verification-7dcf94dff-l8p7r   1/1     Running   0          15s
+
+   * View the output of the ``nvidia-smi`` command from one of the pods:
+
+     .. code-block:: console
+
+        $ kubectl exec deploy/time-slicing-verification -- nvidia-smi
+
+     *Example Output*
+
+     .. code:: console
+
+        +-----------------------------------------------------------------------------+
+        | NVIDIA-SMI 510.73.08    Driver Version: 510.73.08    CUDA Version: 11.6     |
+        |-------------------------------+----------------------+----------------------+
+        | GPU  Name        Persistence-M| Bus-Id        Disp.A | Volatile Uncorr. ECC |
+        | Fan  Temp  Perf  Pwr:Usage/Cap|         Memory-Usage | GPU-Util  Compute M. |
+        |                               |                      |               MIG M. |
+        |===============================+======================+======================|
+        |   0  Tesla T4            On   | 00000000:00:1E.0 Off |                    0 |
+        | N/A   44C    P0    70W /  70W |   1577MiB / 15360MiB |    100%      Default |
+        |                               |                      |                  N/A |
+        +-------------------------------+----------------------+----------------------+
+
+        +-----------------------------------------------------------------------------+
+        | Processes:                                                                  |
+        |  GPU   GI   CI        PID   Type   Process name                  GPU Memory |
+        |        ID   ID                                                   Usage      |
+        |=============================================================================|
+        |    0   N/A  N/A      3666      C   /usr/bin/dcgmproftester11         315MiB |
+        |    0   N/A  N/A      3679      C   /usr/bin/dcgmproftester11         315MiB |
+        |    0   N/A  N/A      3992      C   /usr/bin/dcgmproftester11         315MiB |
+        |    0   N/A  N/A      4119      C   /usr/bin/dcgmproftester11         315MiB |
+        |    0   N/A  N/A      4324      C   /usr/bin/dcgmproftester11         315MiB |
+        +-----------------------------------------------------------------------------+
 
 ***********
 References
