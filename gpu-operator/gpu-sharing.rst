@@ -273,7 +273,7 @@ and want to apply the same time-slicing configuration on all nodes in the cluste
 
    *Example Output*
 
-   .. code-block:: console
+   .. code-block:: output
 
       11s         Normal   Started            pod/gpu-feature-discovery-747w2            Started container config-manager-init
       10s         Normal   Started            pod/gpu-feature-discovery-747w2            Started container gpu-feature-discovery
@@ -356,7 +356,7 @@ control which configuration is applied to which nodes.
 
    *Example Output*
 
-   .. code-block:: console
+   .. code-block:: output
 
       11s         Normal   Started            pod/gpu-feature-discovery-747w2            Started container config-manager-init
       10s         Normal   Started            pod/gpu-feature-discovery-747w2            Started container gpu-feature-discovery
@@ -397,7 +397,7 @@ Perform the following steps to configure time-slicing before installing the oper
 
 #. Create the namespace for the operator:
 
-   .. code-block::
+   .. code-block:: console
 
       $ kubectl create namespace gpu-operator
 
@@ -456,7 +456,7 @@ Perform the following steps to verify that the time-slicing configuration is app
    * The ``nvidia.com/gpu.product`` label includes a ``-SHARED`` suffix to the product name.
    * The ``nvidia.com/gpu.replicas`` label matches the reported capacity.
 
-   .. code-block:: console
+   .. code-block:: output
       :emphasize-lines: 3,4,5,7
 
       ...
@@ -479,7 +479,7 @@ Perform the following steps to verify that the time-slicing configuration is app
    * The ``nvidia.com/gpu.shared`` capacity equals the number of physical GPUs multiplied by the
      specified number of GPU replicas to create.
 
-   .. code-block:: console
+   .. code-block:: output
       :emphasize-lines: 3,7,8
 
       ...
@@ -549,7 +549,7 @@ Perform the following steps to verify that the time-slicing configuration is app
 
      *Example Output*
 
-     .. code-block:: console
+     .. code-block:: output
 
         NAME                                        READY   STATUS    RESTARTS   AGE
         time-slicing-verification-7dcf94dff-54r4n   1/1     Running   0          15s
@@ -566,7 +566,7 @@ Perform the following steps to verify that the time-slicing configuration is app
 
      *Example Output*
 
-     .. code:: console
+     .. code-block:: output
 
         +-----------------------------------------------------------------------------+
         | NVIDIA-SMI 510.73.08    Driver Version: 510.73.08    CUDA Version: 11.6     |
