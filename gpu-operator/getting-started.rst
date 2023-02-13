@@ -66,12 +66,6 @@ Before installing the GPU Operator on NVIDIA vGPU, ensure the following.
 
 The rest of this document includes instructions for installing the GPU Operator on supported Linux distributions.
 
-Install Kubernetes
-===================
-.. Shared content for K8s
-
-Refer to :ref:`install-k8s` for getting started with setting up a Kubernetes cluster.
-
 .. Shared content for the GPU Operator install
 
 .. include:: install-gpu-operator.rst

@@ -50,7 +50,6 @@ using NVIDIA GPUs with Kubernetes.
    :maxdepth: 2
    :caption: Kubernetes with GPUs:
 
-   kubernetes/install-k8s.rst
    kubernetes/mig-k8s.rst
    kubernetes/anthos-guide.rst
 
