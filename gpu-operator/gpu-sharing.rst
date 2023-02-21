@@ -149,23 +149,8 @@ A machine with two GPUs advertises eight GPUs, and so on.
 
 .. rubric:: Sample Config Map
 
-.. code-block:: yaml
-
-    apiVersion: v1
-    kind: ConfigMap
-    metadata:
-      name: time-slicing-config
-      namespace: gpu-operator
-    data:
-      any: |-
-        version: v1
-        sharing:
-          timeSlicing:
-            renameByDefault: false
-            failRequestsGreaterThanOne: false
-            resources:
-              - name: nvidia.com/gpu
-                replicas: 4
+.. literalinclude:: ./manifests/input/time-slicing-config-sample.yaml
+   :language: yaml
 
 The following table describes the key fields in the config map.
 
@@ -232,29 +217,16 @@ Applying One Cluster-Wide Configuration
 Perform the following steps to configure GPU time-slicing if you already installed the GPU operator
 and want to apply the same time-slicing configuration on all nodes in the cluster.
 
-#. Create a file, such as ``time-slicing-config-all.yaml`` with contents like the following example:
+#. Create a file, such as ``time-slicing-config-all.yaml``, with contents like the following example:
 
-   .. code-block:: yaml
-
-      apiVersion: v1
-      kind: ConfigMap
-      metadata:
-        name: time-slicing-config-all
-        namespace: gpu-operator
-      data:
-        any: |-
-          version: v1
-          sharing:
-            timeSlicing:
-              resources:
-              - name: nvidia.com/gpu
-                replicas: 4
+   .. literalinclude:: ./manifests/input/time-slicing-config-all.yaml
+      :language: yaml
 
 #. Add the config map to the same namespace as the GPU operator:
 
    .. code-block:: console
 
-      $ kubectl create -f time-slicing-config-all.yaml
+      $ kubectl create -n gpu-operator -f time-slicing-config-all.yaml
 
 #. Configure the device plugin with the config map and set the default time-slicing configuration:
 
@@ -273,17 +245,8 @@ and want to apply the same time-slicing configuration on all nodes in the cluste
 
    *Example Output*
 
-   .. code-block:: output
-
-      11s         Normal   Started            pod/gpu-feature-discovery-747w2            Started container config-manager-init
-      10s         Normal   Started            pod/gpu-feature-discovery-747w2            Started container gpu-feature-discovery
-      10s         Normal   Pulled             pod/gpu-feature-discovery-747w2            Container image "nvcr.io/nvidia/k8s-device-plugin:v0.13.0-ubi8" already present on machine
-      10s         Normal   Created            pod/gpu-feature-discovery-747w2            Created container config-manager
-      10s         Normal   Started            pod/gpu-feature-discovery-747w2            Started container config-manager
-      10s         Normal   Started            pod/nvidia-device-plugin-daemonset-ptw8g   Started container nvidia-device-plugin
-      10s         Normal   Pulled             pod/nvidia-device-plugin-daemonset-ptw8g   Container image "nvcr.io/nvidia/k8s-device-plugin:v0.13.0-ubi8" already present on machine
-      10s         Normal   Created            pod/nvidia-device-plugin-daemonset-ptw8g   Created container config-manager
-      10s         Normal   Started            pod/nvidia-device-plugin-daemonset-ptw8g   Started container config-manager
+   .. literalinclude:: ./manifests/output/time-slicing-get-events.txt
+      :language: output
 
 Refer to :ref:`time-slicing-verify`.
 
@@ -298,42 +261,14 @@ control which configuration is applied to which nodes.
 
 #. Create a file, such as ``time-slicing-config-fine.yaml``, with contents like the following example:
 
-   .. code-block:: yaml
-
-       apiVersion: v1
-       kind: ConfigMap
-       metadata:
-         name: time-slicing-config-fine
-         namespace: gpu-operator
-       data:
-         a100-40gb: |-
-           version: v1
-           sharing:
-             timeSlicing:
-               resources:
-               - name: nvidia.com/gpu
-                 replicas: 8
-               - name: nvidia.com/mig-1g.5gb
-                 replicas: 2
-               - name: nvidia.com/mig-2g.10gb
-                 replicas: 2
-               - name: nvidia.com/mig-3g.20gb
-                 replicas: 3
-               - name: nvidia.com/mig-7g.40gb
-                 replicas: 7
-         tesla-t4: |-
-           version: v1
-           sharing:
-             timeSlicing:
-               resources:
-               - name: nvidia.com/gpu
-                 replicas: 4
+   .. literalinclude:: ./manifests/input/time-slicing-config-fine.yaml
+      :language: yaml
 
 #. Add the config map to the same namespace as the GPU operator:
 
    .. code-block:: console
 
-      $ kubectl create -f time-slicing-config-fine.yaml
+      $ kubectl create -n gpu-operator -f time-slicing-config-fine.yaml
 
 #. Configure the device plugin with the config map and set the default time-slicing configuration:
 
@@ -356,17 +291,8 @@ control which configuration is applied to which nodes.
 
    *Example Output*
 
-   .. code-block:: output
-
-      11s         Normal   Started            pod/gpu-feature-discovery-747w2            Started container config-manager-init
-      10s         Normal   Started            pod/gpu-feature-discovery-747w2            Started container gpu-feature-discovery
-      10s         Normal   Pulled             pod/gpu-feature-discovery-747w2            Container image "nvcr.io/nvidia/k8s-device-plugin:v0.13.0-ubi8" already present on machine
-      10s         Normal   Created            pod/gpu-feature-discovery-747w2            Created container config-manager
-      10s         Normal   Started            pod/gpu-feature-discovery-747w2            Started container config-manager
-      10s         Normal   Started            pod/nvidia-device-plugin-daemonset-ptw8g   Started container nvidia-device-plugin
-      10s         Normal   Pulled             pod/nvidia-device-plugin-daemonset-ptw8g   Container image "nvcr.io/nvidia/k8s-device-plugin:v0.13.0-ubi8" already present on machine
-      10s         Normal   Created            pod/nvidia-device-plugin-daemonset-ptw8g   Created container config-manager
-      10s         Normal   Started            pod/nvidia-device-plugin-daemonset-ptw8g   Started container config-manager
+   .. literalinclude:: ./manifests/output/time-slicing-get-events.txt
+      :language: output
 
 #. Apply a label to the nodes by running one or more of the following commands:
 
@@ -498,42 +424,10 @@ Perform the following steps to verify that the time-slicing configuration is app
 
 #. (Optional) Deploy a workload to validate GPU time-slicing:
 
-   * Create a file such as ``time-slicing-verification.yaml``, with the following contents:
+   * Create a file, such as ``time-slicing-verification.yaml``, with contents like the following:
 
-     .. code-block:: yaml
-
-        apiVersion: apps/v1
-        kind: Deployment
-        metadata:
-          name: time-slicing-verification
-          labels:
-            app: time-slicing-verification
-        spec:
-          replicas: 5
-          selector:
-            matchLabels:
-              app: time-slicing-verification
-          template:
-            metadata:
-              labels:
-                app: time-slicing-verification
-            spec:
-              tolerations:
-                - key: nvidia.com/gpu
-                  operator: Exists
-                  effect: NoSchedule
-              containers:
-                - name: dcgmproftester11
-                  image: nvidia/samples:dcgmproftester-2.1.7-cuda11.2.2-ubuntu20.04
-                  command: ["/bin/sh", "-c"]
-                  args:
-                    - while true; do /usr/bin/dcgmproftester11 --no-dcgm-validation -t 1004 -d 300; sleep 30; done
-                  resources:
-                   limits:
-                     nvidia.com/gpu: 1
-                  securityContext:
-                    capabilities:
-                      add: ["SYS_ADMIN"]
+     .. literalinclude:: ./manifests/input/time-slicing-verification.yaml
+        :language: yaml
 
    * Create the deployment with multiple replicas:
 
@@ -549,48 +443,31 @@ Perform the following steps to verify that the time-slicing configuration is app
 
      *Example Output*
 
-     .. code-block:: output
+     .. literalinclude:: ./manifests/output/time-slicing-get-pods.txt
+        :language: output
 
-        NAME                                        READY   STATUS    RESTARTS   AGE
-        time-slicing-verification-7dcf94dff-54r4n   1/1     Running   0          15s
-        time-slicing-verification-7dcf94dff-bznd2   1/1     Running   0          15s
-        time-slicing-verification-7dcf94dff-gjd8n   1/1     Running   0          15s
-        time-slicing-verification-7dcf94dff-jqcld   1/1     Running   0          15s
-        time-slicing-verification-7dcf94dff-l8p7r   1/1     Running   0          15s
-
-   * View the output of the ``nvidia-smi`` command from one of the pods:
+   * View the logs from one of the pods:
 
      .. code-block:: console
 
-        $ kubectl exec deploy/time-slicing-verification -- nvidia-smi
+        $ kubectl logs deploy/time-slicing-verification
 
      *Example Output*
 
-     .. code-block:: output
+     .. literalinclude:: ./manifests/output/time-slicing-logs-pods.txt
+        :language: output
 
-        +-----------------------------------------------------------------------------+
-        | NVIDIA-SMI 510.73.08    Driver Version: 510.73.08    CUDA Version: 11.6     |
-        |-------------------------------+----------------------+----------------------+
-        | GPU  Name        Persistence-M| Bus-Id        Disp.A | Volatile Uncorr. ECC |
-        | Fan  Temp  Perf  Pwr:Usage/Cap|         Memory-Usage | GPU-Util  Compute M. |
-        |                               |                      |               MIG M. |
-        |===============================+======================+======================|
-        |   0  Tesla T4            On   | 00000000:00:1E.0 Off |                    0 |
-        | N/A   44C    P0    70W /  70W |   1577MiB / 15360MiB |    100%      Default |
-        |                               |                      |                  N/A |
-        +-------------------------------+----------------------+----------------------+
+   * Stop the deployment:
 
-        +-----------------------------------------------------------------------------+
-        | Processes:                                                                  |
-        |  GPU   GI   CI        PID   Type   Process name                  GPU Memory |
-        |        ID   ID                                                   Usage      |
-        |=============================================================================|
-        |    0   N/A  N/A      3666      C   /usr/bin/dcgmproftester11         315MiB |
-        |    0   N/A  N/A      3679      C   /usr/bin/dcgmproftester11         315MiB |
-        |    0   N/A  N/A      3992      C   /usr/bin/dcgmproftester11         315MiB |
-        |    0   N/A  N/A      4119      C   /usr/bin/dcgmproftester11         315MiB |
-        |    0   N/A  N/A      4324      C   /usr/bin/dcgmproftester11         315MiB |
-        +-----------------------------------------------------------------------------+
+     .. code-block:: console
+
+        $ kubectl delete -f time-slicing-verification.yaml
+
+    *Example Output*
+
+    .. code-block:: output
+
+       deployment.apps "time-slicing-verification" deleted
 
 ***********
 References
