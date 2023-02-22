@@ -5,6 +5,8 @@ metadata:
 data:
   a100-40gb: |-
     version: v1
+    flags:
+      migStrategy: mixed
     sharing:
       timeSlicing:
         resources:
@@ -20,6 +22,8 @@ data:
           replicas: 7
   tesla-t4: |-
     version: v1
+    flags:
+      migStrategy: none
     sharing:
       timeSlicing:
         resources:

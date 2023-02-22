@@ -5,6 +5,8 @@ metadata:
 data:
   any: |-
     version: v1
+    flags:
+      migStrategy: none
     sharing:
       timeSlicing:
         resources:

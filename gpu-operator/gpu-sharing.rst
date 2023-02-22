@@ -53,7 +53,7 @@ Comparison: Time-Slicing and Multi-Instance GPU
 ===============================================
 
 The latest generations of NVIDIA GPUs provide an operation mode called
-Multi-Instance GPU, or MIG. MIG allows you to partition a GPU
+Multi-Instance GPU (MIG). MIG allows you to partition a GPU
 into several smaller, predefined instances, each of which looks like a
 mini-GPU that provides memory and fault isolation at the hardware layer.
 You can share access to a GPU by running workloads on one of
@@ -66,6 +66,8 @@ Time-slicing trades the memory and fault-isolation that is provided by MIG
 for the ability to share a GPU by a larger number of users.
 Time-slicing also provides a way to provide shared access to a GPU for
 older generation GPUs that do not support MIG.
+However, you can combine MIG and time-slicing to provide shared access to
+MIG instances.
 
 
 Support Platforms and Resource Types
@@ -78,30 +80,11 @@ Currently, the only supported resource types are ``nvidia.com/gpu``
 and any of the resource types that emerge from configuring a node with
 the mixed MIG strategy.
 
-The following table identifies the time-sliceable resources by product type.
-
-.. list-table::
-   :header-rows: 1
-
-   * - Tesla-T4
-     - A100 40GB
-     - A100 80GB
-   * - * ``nvidia.com/gpu``
-     - * ``nvidia.com/gpu``
-       * ``nvidia.com/mig-1g.5gb``
-       * ``nvidia.com/mig-2g.10gb``
-       * ``nvidia.com/mig-3g.20gb``
-       * ``nvidia.com/mig-7g.40gb``
-     - * ``nvidia.com/gpu``
-       * ``nvidia.com/mig-1g.10gb``
-       * ``nvidia.com/mig-2g.20gb``
-       * ``nvidia.com/mig-3g.40gb``
-       * ``nvidia.com/mig-7g.80gb``
 
 Changes to Node Labels
 ======================
 
-In addition to the standard node labels that the GPU Feature Discovery Plugin (GFD)
+In addition to the standard node labels that GPU Feature Discovery (GFD)
 applies to nodes, the following label is also applied after you configure
 GPU time-slicing for a node:
 
@@ -115,20 +98,31 @@ Additionally, by default, the ``nvidia.com/<resource-name>.product`` label is mo
 
 .. code-block:: yaml
 
-    nvidia.com/<resource-name>.product = <product-name>-SHARED
+   nvidia.com/<resource-name>.product = <product-name>-SHARED
+
+For example, on an NVIDIA DGX A100 machine, depending on the time-slicing configuration,
+the labels can be similar to the following example:
+
+.. code-block:: yaml
+
+   nvidia.com/gpu.replicas = 8
+   nvidia.com/gpu.product = A100-SXM4-40GB-SHARED
 
 Using these labels, you can request time-sliced access to a GPU or exclusive access to a GPU
 in the same way that you traditionally specify a node selector to request one GPU model over another.
 That is, the ``-SHARED`` product name suffix ensures that you can specify a
 node selector to assign pods to nodes with time-sliced GPUs.
 
-When ``renameByDefault=false`` and ``migStrategy=single``, both the MIG profile name
-and the ``-SHARED`` suffix are appended to the product name. Refer to the following example:
+The ``migStrategy`` configuration option has an effect on the node label for the product name.
+When ``renameByDefault=false``, the default value, and ``migStrategy=single``, both the MIG profile name
+and the ``-SHARED`` suffix are appended to the product name, such as the following example:
 
 .. code-block:: yaml
 
     nvidia.com/gpu.product = A100-SXM4-40GB-MIG-1g.5gb-SHARED
 
+If you set ``renameByDefault=true``, then the value of the ``nvidia.com/gpu.product`` node
+label is not modified.
 
 *************
 Configuration
@@ -161,11 +155,20 @@ The following table describes the key fields in the config map.
    * - Field
      - Type
      - Description
+
    * - ``data.<key>``
      - string
      - Specifies the time-slicing configuration name.
 
        You can specify multiple configurations if you want to assign node-specific configurations.
+
+   * - ``flags.migStrategy``
+     - string
+     - Specifies how to label MIG devices for the nodes that receive the time-slicing configuration.
+       Specify one of ``none``, ``single``, or ``mixed``.
+
+       The default value is ``none``.
+
    * - ``renameByDefault``
      - boolean
      - When set to ``true``, each resource is advertised under the name ``<resource-name>.shared``
@@ -187,6 +190,7 @@ The following table describes the key fields in the config map.
        schedule pods on GPUs with shared access.
 
        The default value is ``false``.
+
    * - ``failRequestsGreaterThanOne``
      - boolean
      - The purpose of this field is to enforce awareness that requesting more than one GPU replica does not
@@ -199,10 +203,12 @@ The following table describes the key fields in the config map.
 
        When set to ``true``, a resource request for more than one GPU fails with an ``UnexpectedAdmissionError``.
        In this case, you must manually delete the pod, update the resource request, and redeploy.
+
    * - ``resources.name``
      - string
      - Specifies the resource type to make available with time-sliced access, such as ``nvidia.com/gpu``,
        ``nvidia.com/mig-1g.5gb``, and so on.
+
    * - ``resources.replicas``
      - integer
      - Specifies the number of time-sliced GPU replicas to make available for shared access to GPUs of the
@@ -468,6 +474,10 @@ Perform the following steps to verify that the time-slicing configuration is app
     .. code-block:: output
 
        deployment.apps "time-slicing-verification" deleted
+
+**********************
+Example Configurations
+**********************
 
 ***********
 References
