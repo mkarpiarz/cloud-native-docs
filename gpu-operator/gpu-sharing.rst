@@ -161,6 +161,7 @@ The following table describes the key fields in the config map.
      - Specifies the time-slicing configuration name.
 
        You can specify multiple configurations if you want to assign node-specific configurations.
+       In the preceding example, the value for ``key`` is ``any``.
 
    * - ``flags.migStrategy``
      - string
