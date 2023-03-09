@@ -1,9 +1,7 @@
-image: docker:19.03.12
-
 variables:
-  DOCKER_HOST: tcp://docker:2375
-  DOCKER_TLS_CERTDIR: ""
-  BUILDER_IMAGE: "${CI_REGISTRY_IMAGE}/cnt-sphinxdoc-${CI_PIPELINE_ID}"
+  BUILDER_TEST_IMAGE: "${CI_REGISTRY_IMAGE}/cnt-sphinxdoc:${CI_COMMIT_REF_SLUG}"
+  BUILDER_RELEASE_IMAGE: "${CI_REGISTRY_IMAGE}/cnt-sphinxdoc:0.1.0"
+  BUILDER_IMAGE: "${BUILDER_RELEASE_IMAGE}"
 
 # Enable pipelines on merge requests, tags, and branches.
 # Avoid duplicate pipelines when pushing to a branch associated with an open MR.
@@ -19,84 +17,86 @@ workflow:
 stages:
 - build_image
 - build_docs
-- stage_docs
 - publish_docs
 
-services:
-  - docker:19.03.12-dind
-
-before_script:
-  - echo "${BUILDER_IMAGE}"
-  - docker info
-  - docker login -u "${CI_REGISTRY_USER}" -p "${CI_REGISTRY_PASSWORD}" "${CI_REGISTRY}"
 
 build_image:
+  image: docker:19.03.12
   stage: build_image
+  services:
+    - docker:19.03.12-dind
   script:
-    - docker build --pull --no-cache --tag "${BUILDER_IMAGE}" --file docker/Dockerfile .
-    - docker push "${BUILDER_IMAGE}"
-
-.build_docs:
-  stage: build_docs
-  variables:
-    PROJECT_PATH: "${CI_BUILDS_DIR}/${CI_CONCURRENT_ID}/${CI_PROJECT_NAME}"
-    DOC_MOUNT_PATH: "/docs"
-    DOC_BUILD_PATH: "${DOC_MOUNT_PATH}/_build/html/"
-    DOC_STAGE_PATH: "/opt/build/html/${CI_PIPELINE_ID}"
-    CONTAINER_NAME: "${CI_PROJECT_NAME}.${CI_JOB_ID}.${CI_JOB_NAME}"
-  script:
-  - echo "${PROJECT_PATH}"
-  - echo "${DOC_BUILD_PATH}"
-  - echo "${DOC_STAGE_PATH}"
-  - echo "${CONTAINER_NAME}"
-  - docker run --name "${CONTAINER_NAME}" -v "${CI_PROJECT_DIR}":"${DOC_MOUNT_PATH}" "${BUILDER_IMAGE}"
+    - docker login -u "${CI_REGISTRY_USER}" -p "${CI_REGISTRY_PASSWORD}" "${CI_REGISTRY}"
+    - docker build --no-cache --tag "${BUILDER_TEST_IMAGE}" --file docker/Dockerfile assets/
+    - docker push "${BUILDER_TEST_IMAGE}"
+    - echo "BUILDER_IMAGE=${BUILDER_TEST_IMAGE}" >> build.env
+    - >
+      if [ "${CI_COMMIT_BRANCH}" == "${CI_DEFAULT_BRANCH}" ] && [ "${CI_PIPELINE_SOURCE}" == "push" ]; then
+        docker tag "${BUILDER_TEST_IMAGE}" "${BUILDER_RELEASE_IMAGE}"
+        docker push $"{BUILDER_RELEASE_IMAGE}"
+      fi
+  artifacts:
+    reports:
+      dotenv: build.env
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "push" || $CI_PIPELINE_SOURCE == "merge_request_event"
+      changes:
+        - docker/Dockerfile
 
 build_docs:
-  extends:
-    - .build_docs
-  after_script:
-  - docker cp "${CONTAINER_NAME}:${DOC_BUILD_PATH}" "${DOC_STAGE_PATH}"
-  - docker rm -f ${CONTAINER_NAME}
-  - docker rmi "${BUILDER_IMAGE}"
-  only:
-    variables:
-      - $INTERNAL
+  image: "${BUILDER_IMAGE}"
+  stage: build_docs
+  variables:
+  script:
+  - make html
+  - echo "BUILDER_IMAGE=${BUILDER_IMAGE}" >> build.env
+  artifacts:
+    name: ${CI_PROJECT_NAME}-${CI_COMMIT_SHORT_SHA}
+    paths:
+      - _build/html
+    expire_in: 1 mos
+    reports:
+      dotenv: build.env
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
+
 
 pages:
-  extends:
-    .build_docs
-  after_script:
-  - mkdir public
+  image: "${BUILDER_RELEASE_IMAGE}"
+  stage: publish_docs
+  script:
+  - make html
+  - rm -rf public
   - mv _build/html/* public
-  - docker rm -f ${CONTAINER_NAME}
-  - docker rmi "${BUILDER_IMAGE}"
-  - echo "Looks like everything was built OK. See the staged docs at ${CI_PAGES_URL}"
+  - echo "Looks like everything was built OK. See the public docs at ${CI_PAGES_URL}"
   artifacts:
     paths:
       - public
-    expire_in: 1 week
-  except:
-    variables:
-      - $INTERNAL
+  rules:
+    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH && $CI_PIPELINE_SOURCE == "push" && $INTERNAL == null
 
-stage_docs:
-  stage: stage_docs
-  script:
-  - export STAGING_URL="http://${CI_RUNNER_DESCRIPTION}/html/${CI_PIPELINE_ID}"
-  - echo "Looks like everything was built OK. See the staged docs at ${STAGING_URL}"
-  only:
-    variables:
-      - $INTERNAL
 
 publish_docs:
+  image: "${BUILDER_RELEASE_IMAGE}"
   stage: publish_docs
-  before_script:
-    - apk add --update curl && rm -rf /var/cache/apk/*
+  variables:
+    HTML_PATH: "_build/html"
   script:
-  - echo "Pushing docs live to https://docs.nvidia.com/datacenter/cloud-native"
-  - /opt/build/html/deploy_web.sh --copy-flush ${CI_PIPELINE_ID}
-  only:
-    refs:
-      - master
-    variables:
-      - $INTERNAL
+    - echo "Pushing docs live to https://docs.nvidia.com/datacenter/cloud-native"
+    - make html
+    - CREDS=$(aws sts assume-role --role-arn arn:aws:iam::${DMO_AWS_ACCOUNT_ID}:role/${DMO_IAM_ROLE} --role-session-name "us-east-1-$(date +%Y-%m-%d-%H-%M-%S)" --duration-seconds 1500 --out json)
+    - export AWS_ACCESS_KEY_ID=$(echo $CREDS | jq -r '.Credentials.AccessKeyId')
+    - export AWS_SECRET_ACCESS_KEY=$(echo $CREDS | jq -r '.Credentials.SecretAccessKey')
+    - export AWS_SESSION_TOKEN=$(echo $CREDS | jq -r '.Credentials.SessionToken')
+    - export AWS_REGION=us-east-1
+    - aws sts get-caller-identity
+    - aws s3 sync "${HTML_PATH}" "${TARGET_PATH}" --exclude .buildinfo
+    - echo "[default]"                              > ~/.edgerc
+    - echo "client_secret = ${AKAMAI_SECRET}"      >> ~/.edgerc
+    - echo "host = ${AKAMAI_HOST}"                 >> ~/.edgerc
+    - echo "access_token = ${AKAMAI_ACCESS_TOKEN}" >> ~/.edgerc
+    - echo "client_token = ${AKAMAI_CLIENT_TOKEN}" >> ~/.edgerc
+    - unset AKAMAI_SECRET AKAMAI_HOST AKAMAI_ACCESS_TOKEN AKAMAI_CLIENT_TOKEN
+    - akamai-purge --edgerc ~/.edgerc --section default delete --tag "${AKAMAI_TAG}"
+  rules:
+    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH && $CI_PIPELINE_SOURCE == "push" && $INTERNAL != null
