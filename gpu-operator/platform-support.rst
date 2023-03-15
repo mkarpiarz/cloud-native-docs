@@ -211,10 +211,13 @@ The GPU Operator has been validated in the following scenarios:
          - | HPE Ezmeral
            | Runtime
            | Enterprise
+         - | Canonical
+           | MicroK8s
 
        * - Ubuntu 18.04 LTS
          - | 1.21, 1.22, 1,23
            | 1.24, 1.25, 1.26
+         -
          -
          -
          -
@@ -228,6 +231,7 @@ The GPU Operator has been validated in the following scenarios:
          - | 1.21, 1.22, 1.23,
            | 1.24, 1.25
          -
+         -
 
        * - Ubuntu 22.04 LTS
          - | 1.21, 1.22, 1,23
@@ -236,10 +240,12 @@ The GPU Operator has been validated in the following scenarios:
          -
          -
          -
+         - 1.26
 
        * - CentOS 7
          - | 1.21, 1.22, 1,23
            | 1.24, 1.25, 1.26
+         -
          -
          -
          -
@@ -249,6 +255,7 @@ The GPU Operator has been validated in the following scenarios:
          -
          - | 4.9, 4.10
            | 4.11, 4.12
+         -
          -
          -
          -
@@ -264,6 +271,7 @@ The GPU Operator has been validated in the following scenarios:
          - | 1.21, 1.22, 1.23,
            | 1.24, 1.25
          -
+         -
 
        * - | Red Hat
            | Enterprise
@@ -273,6 +281,7 @@ The GPU Operator has been validated in the following scenarios:
          -
          -
          - 5.5
+         -
 
     .. note::
 
@@ -485,10 +494,13 @@ Supported operating systems and NVIDIA GPU Drivers with GPUDirect Storage.
 +--------------------------------------------------+---------------------------+
 | Ubuntu 22.04 LTS with Network Operator 1.4       | 525.60.13 (2.14.13)       |
 +--------------------------------------------------+---------------------------+
+| Red Hat OpenShift Container Platform 4.11        | 525.85.12 (2.14.13)       |
++--------------------------------------------------+---------------------------+
 
 .. note::
 
-      Not supported with secure boot and only with local NVME and remote NFS storage.
+      Not supported with secure boot.
+      Supported storage types are local NVMe and remote NFS.
 
 Additional Supported Container Management Tools
 -----------------------------------------------
