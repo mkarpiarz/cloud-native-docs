@@ -71,6 +71,27 @@ The following options are available when using the Helm chart. These options can
      - Description
      - Default
 
+   * - ``cdi.enabled``
+     - When set to ``true``, the Operator installs two additional runtime classes,
+       nvidia-cdi and nvidia-legacy and enables injecting Container Device Interface (CDI)
+       devices into the nvidia-cdi runtime.
+       Using CDI aligns the Operator with the recent efforts to standardize how complex devices like GPUs
+       are exposed to containerized environments.
+
+       Pods can specify ``spec.runtimeClassName`` as ``nvidia-cdi`` to use the functionality or
+       specify ``nvidia-legacy`` or ``nvidia`` to use the default runtime class.
+
+       NVIDIA recommends enabling CDI.
+     - ``false``
+
+   * - ``cdi.default``
+     - When set to ``true``, the nvidia-cdi runtime is set as the default runtime class.
+       Otherwise, the default runtime class is ``nvidia``.
+
+       NVIDIA recommends using nvidia-cdi as the default runtime class.
+
+     - ``false``
+
    * - ``daemonsets.annotations``
      - Map of custom annotations to add to all GPU Operator managed pods.
      - ``{}``
@@ -138,6 +159,24 @@ The following options are available when using the Helm chart. These options can
        with pre-installed NVIDIA runtimes.
      - ``true``
 
+   * - ``operator.defaultRuntime``
+     - **DEPRECATED as of v1.9**
+     - ``docker``
+
+   * - ``operator.labels``
+     - Map of custom labels that will be added to all GPU Operator managed pods.
+     - ``{}``
+
+   * - ``psp.enabled``
+     - The GPU operator deploys ``PodSecurityPolicies`` if enabled.
+     - ``false``
+
+   * - ``toolkit.enabled``
+     - By default, the Operator deploys the NVIDIA Container Toolkit (``nvidia-docker2`` stack)
+       as a container on the system. Set this value to ``false`` when using the Operator on systems
+       with pre-installed NVIDIA runtimes.
+     - ``true``
+
 
 Namespace
 ^^^^^^^^^
@@ -176,7 +215,6 @@ Common Deployment Scenarios
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 In this section, we present some common deployment recipes when using the Helm chart to install the GPU Operator.
-
 
 Bare-metal/Passthrough with default configurations on Ubuntu
 """"""""""""""""""""""""""""""""""""""""""""""""""""""""""""

@@ -43,6 +43,7 @@ using NVIDIA GPUs with Kubernetes.
    gpu-operator/gpu-sharing.rst
    gpu-operator/gpu-operator-rdma.rst
    gpu-operator/gpu-operator-kubevirt.rst
+   Container Device Interface Support <gpu-operator/cdi.rst>
    gpu-operator/appendix.rst
    gpu-operator/archive.rst
 
