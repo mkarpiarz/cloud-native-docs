@@ -4,7 +4,7 @@ variables:
   DOCKER_HOST: tcp://docker:2375
   DOCKER_TLS_CERTDIR: ""
   BUILDER_IMAGE: "${CI_REGISTRY_IMAGE}/cnt-sphinxdoc-${CI_PIPELINE_ID}"
-  PUBLISHER_IMAGE: "${CI_REGISTRY}/cnt-docs-infra/publisher:1.0.0"
+  PUBLISHER_IMAGE: "${CI_REGISTRY_PUBLISHER}/publisher:1.0.0"
 
 # Enable pipelines on merge requests, tags, and branches.
 # Avoid duplicate pipelines when pushing to a branch associated with an open MR.
