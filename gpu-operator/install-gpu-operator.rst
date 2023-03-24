@@ -73,23 +73,17 @@ The following options are available when using the Helm chart. These options can
 
    * - ``cdi.enabled``
      - When set to ``true``, the Operator installs two additional runtime classes,
-       nvidia-cdi and nvidia-legacy and enables injecting Container Device Interface (CDI)
-       devices into the nvidia-cdi runtime.
+       nvidia-cdi and nvidia-legacy and enables the use of the Container Device Interface (CDI)
+       to request devices internally.
        Using CDI aligns the Operator with the recent efforts to standardize how complex devices like GPUs
        are exposed to containerized environments.
 
        Pods can specify ``spec.runtimeClassName`` as ``nvidia-cdi`` to use the functionality or
-       specify ``nvidia-legacy`` or ``nvidia`` to use the default runtime class.
-
-       NVIDIA recommends enabling CDI.
+       specify ``nvidia-legacy`` to prevent using CDI to perform device injection.
      - ``false``
 
    * - ``cdi.default``
-     - When set to ``true``, the nvidia-cdi runtime is set as the default runtime class.
-       Otherwise, the default runtime class is ``nvidia``.
-
-       NVIDIA recommends using nvidia-cdi as the default runtime class.
-
+     - When set to ``true``, the container runtime uses CDI to perform device injection by default.
      - ``false``
 
    * - ``daemonsets.annotations``
@@ -215,6 +209,7 @@ Common Deployment Scenarios
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 In this section, we present some common deployment recipes when using the Helm chart to install the GPU Operator.
+
 
 Bare-metal/Passthrough with default configurations on Ubuntu
 """"""""""""""""""""""""""""""""""""""""""""""""""""""""""""

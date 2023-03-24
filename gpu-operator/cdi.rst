@@ -39,10 +39,14 @@ Use of CDI is transparent to cluster administrators and application developers.
 The benefits of CDI are largely to reduce development and support for runtime-specific
 plugins.
 
-NVIDIA recommends enabling CDI during installation or post-installation configuration.
+When CDI is enabled, two runtime classes, nvidia-cdi and nvidia-legacy, become available.
+These two runtime classes are in addition to the default runtime class, nvidia.
 
-One possible exposure of CDI to administrators and developers is the ability to
-specify which container runtime to use when creating a pod specification.
+If you do not set CDI as the default runtime, the runtime resolves to the
+legacy runtime mode that the NVIDIA Container Toolkit provides on x86_64
+machines or any architecture that has NVML libraries installed.
+
+Optionally, you can specify the runtime class for a workload.
 See :ref:`Specifying the Runtime Class for a Pod` for an example.
 
 
@@ -81,7 +85,7 @@ Prerequisites
 Procedure
 =========
 
-To configure CDI as the default runtime class, perform the following steps:
+To enable CDI support, perform the following steps:
 
 #. Enable CDI by modifying the cluster policy:
 
@@ -96,7 +100,7 @@ To configure CDI as the default runtime class, perform the following steps:
 
     clusterpolicy.nvidia.com/cluster-policy patched
 
-#. (Optional) Set CDI as the default runtime class by modifying the cluster policy:
+#. (Optional) Set the default container runtime mode to CDI by modifying the cluster policy:
 
    .. code-block:: console
 
@@ -119,6 +123,7 @@ To configure CDI as the default runtime class, perform the following steps:
 
    .. literalinclude:: ./manifests/output/cdi-get-pods-restart.txt
       :language: output
+      :emphasize-lines: 6,9
 
 #. Verify that the runtime classes include nvidia-cdi and nvidia-legacy:
 
@@ -136,31 +141,37 @@ To configure CDI as the default runtime class, perform the following steps:
 Specifying the Runtime Class for a Pod
 **************************************
 
-You can run the following steps to verify that CDI is enabled or as a
-routine practice if you did not set CDI as the default runtime class.
+If you enabled CDI as the default container runtime, then you can use the
+following procedure to specify nvidia-legacy for a workload if you experience
+trouble.
+
+If you did not enable CDI as the default container runtime, then you can
+use the following procedure to verify that CDI is enabled and as a
+routine practice to use the CDI mode of the container runtime.
 
 #. Create a file, such as ``cuda-vectoradd-cdi.yaml``, with contents like the following example:
 
    .. literalinclude:: ./manifests/input/cuda-vectoradd-cdi.yaml
       :language: yaml
+      :emphasize-lines: 7
 
 #. (Optional) Create a temporary namespace:
 
    .. code-block:: console
 
-     $ kubectl create ns cdi-verify
+     $ kubectl create ns demo
 
    *Example Output*
 
    .. code-block:: output
 
-     namespace/cdi-verify created
+     namespace/demo created
 
 #. Start the pod:
 
    .. code-block:: console
 
-    $ kubectl apply -n cdi-verify -f cuda-vectoradd-cdi.yaml
+    $ kubectl apply -n demo -f cuda-vectoradd-cdi.yaml
 
    *Example Output*
 
@@ -172,7 +183,7 @@ routine practice if you did not set CDI as the default runtime class.
 
    .. code-block:: console
 
-     $ kubectl logs -n cdi-verify cuda-vectoradd
+     $ kubectl logs -n demo cuda-vectoradd
 
    *Example Output*
 
@@ -183,10 +194,11 @@ routine practice if you did not set CDI as the default runtime class.
 
   .. code-block:: console
 
-    $ kubectl delete ns cdi-verify
+    $ kubectl delete ns demo
 
   *Example Output*
 
   .. code-block:: output
 
-    namespace "cdi-verify" deleted
+    namespace "demo" deleted
+
