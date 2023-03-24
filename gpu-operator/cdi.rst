@@ -50,6 +50,13 @@ Optionally, you can specify the runtime class for a workload.
 See :ref:`Specifying the Runtime Class for a Pod` for an example.
 
 
+Support for Multi-Instance GPU
+==============================
+
+Configuring CDI is supported with Multi-Instance GPU (MIG).
+Both the ``single`` and ``mixed`` strategies are supported.
+
+
 ********************************
 Enabling CDI During Installation
 ********************************
@@ -141,11 +148,11 @@ To enable CDI support, perform the following steps:
 Specifying the Runtime Class for a Pod
 **************************************
 
-If you enabled CDI as the default container runtime, then you can use the
-following procedure to specify nvidia-legacy for a workload if you experience
+If you enabled CDI mode for the default container runtime, then you can use the
+following procedure to specify the legacy mode for a workload if you experience
 trouble.
 
-If you did not enable CDI as the default container runtime, then you can
+If you did not enable CDI mode for the default container runtime, then you can
 use the following procedure to verify that CDI is enabled and as a
 routine practice to use the CDI mode of the container runtime.
 
@@ -154,6 +161,8 @@ routine practice to use the CDI mode of the container runtime.
    .. literalinclude:: ./manifests/input/cuda-vectoradd-cdi.yaml
       :language: yaml
       :emphasize-lines: 7
+
+   As an alternative, specify ``nvidia-legacy`` to use the legacy mode of the container runtime.
 
 #. (Optional) Create a temporary namespace:
 
