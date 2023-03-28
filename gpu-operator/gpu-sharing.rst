@@ -89,8 +89,8 @@ the mixed MIG strategy.
 Limitations
 ===========
 
-DGCM-Exporter does not support gathering metrics from time-sliced GPUs.
-As a result, no GPU metrics are reported for time-sliced GPUs.
+DGCM-Exporter does not provide metrics for time-sliced GPUs.
+The exporter continues to report metrics for the physical GPUs.
 
 
 Changes to Node Labels
