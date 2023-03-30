@@ -1,3 +1,19 @@
+.. license-header
+  SPDX-FileCopyrightText: Copyright (c) 2023 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+  SPDX-License-Identifier: Apache-2.0
+
+  Licensed under the Apache License, Version 2.0 (the "License");
+  you may not use this file except in compliance with the License.
+  You may obtain a copy of the License at
+
+  http://www.apache.org/licenses/LICENSE-2.0
+
+  Unless required by applicable law or agreed to in writing, software
+  distributed under the License is distributed on an "AS IS" BASIS,
+  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  See the License for the specific language governing permissions and
+  limitations under the License.
+
 .. Date: July 30 2020
 .. Author: pramarao
 
@@ -9,13 +25,87 @@ Release Notes
 
 This document describes the new features, improvements, fixed and known issues for the NVIDIA GPU Operator.
 
-See the :ref:`Component Matrix<operator-component-matrix>` for a list of components included in each release.
+See the :ref:`GPU Operator Component Matrix` for a list of components included in each release.
 
 .. note::
 
    GPU Operator beta releases are documented on `GitHub <https://github.com/NVIDIA/gpu-operator/releases>`_. NVIDIA AI Enterprise builds are not posted on GitHub.
 
 ----
+
+23.3.0
+======
+
+
+New Features
+------------
+
+* Added support for the Container Device Interface (CDI) that is implemented by the
+  NVIDIA Container Toolkit v1.13.0.
+  Refer to :ref:`gpu-operator-helm-chart-options` for information about the ``cdi.enable`` and
+  ``cdi.default`` options to enable CDI during installation
+  or :doc:`cdi` for post-installation configuration information.
+
+* [Technology Preview] Added support for precompiled driver containers for select operating systems.
+  This feature removes the dynamic dependencies to build the driver during installation in the
+  cluster such as downloading kernel header packages and GCC tooling.
+  Sites with isolated networks that cannot access the internet can benefit.
+  Sites with machines that are resource constrained can also benefit by removing the computational demand
+  to compile the driver.
+  For more information, see :doc:`precompiled-drivers`.
+
+  This feature replaces the functionality that was previously available with the precompiled and Canonical signed drivers.
+
+
+Improvements
+------------
+
+* FIXME
+
+
+Fixed issues
+------------
+
+* Added support for new MIG profiles with the 525 driver.
+
+  * For A100-40GB and A800-40GB devices:
+
+    * ``1g.5gb.me``
+    * ``1g.10gb``
+    * ``4g.20gb``
+
+  * For H100-80GB, H800-80GB, A100-80GB, and A800-80GB devices:
+
+    * ``1g.10gb``
+    * ``1g.10gb.me``
+    * ``1g.20gb``
+    * ``4g.40gb``
+
+  * For A30-24GB devices:
+
+    * ``1g.6gb.me``
+    * ``2g.12gb.me``
+
+Common Vulnerabilities and Exposures (CVEs)
+-------------------------------------------
+
+
+Known Limitations
+------------------
+
+* All worker nodes within the Kubernetes cluster must use the same operating system version.
+* NVIDIA GPUDirect Storage (GDS) is not supported with secure boot enabled systems.
+* Driver Toolkit images are broken with Red Hat OpenShift version ``4.11.12`` and require cluster-level entitlements to be enabled
+  in this case for the driver installation to succeed.
+* The NVIDIA GPU Operator can only be used to deploy a single NVIDIA GPU Driver type and version. The NVIDIA vGPU and Data Center GPU Driver cannot be used within the same cluster.
+* The ``nouveau`` driver must be blacklisted when using NVIDIA vGPU.
+  Otherwise the driver fails to initialize the GPU with the error ``Failed to enable MSI-X`` in the system journal logs.
+  Additionally, all GPU operator pods become stuck in the ``Init`` state.
+* When using RHEL 8 with Kubernetes, SELinux must be enabled (either in permissive or enforcing mode) for use with the GPU Operator.
+  Additionally, network-restricted environments are not supported.
+
+----
+
 
 22.9.2
 ======
