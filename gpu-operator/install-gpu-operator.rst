@@ -73,7 +73,7 @@ The following options are available when using the Helm chart. These options can
 
    * - ``cdi.enabled``
      - When set to ``true``, the Operator installs two additional runtime classes,
-       nvidia-cdi and nvidia-legacy and enables the use of the Container Device Interface (CDI)
+       nvidia-cdi and nvidia-legacy, and enables the use of the Container Device Interface (CDI)
        to request devices internally.
        Using CDI aligns the Operator with the recent efforts to standardize how complex devices like GPUs
        are exposed to containerized environments.

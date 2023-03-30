@@ -57,14 +57,21 @@ Configuring CDI is supported with Multi-Instance GPU (MIG).
 Both the ``single`` and ``mixed`` strategies are supported.
 
 
+Limitations and Restrictions
+============================
+
+Enabling CDI is not supported with Red Hat OpenShift Container Platform.
+Refer to the :ref:`Supported Operating Systems and Kubernetes Platforms`.
+
+
 ********************************
 Enabling CDI During Installation
 ********************************
 
-Follow the installation to use Helm for installing the Operator on the :doc:`operator-install-guide` page.
+Follow the instructions for installing the Operator with Helm on the :doc:`operator-install-guide` page.
 
 When you install the Operator with Helm, specify the ``--set cdi.enabled=true`` argument.
-Optionally, also specify the ``--set cdi.default=true`` argument to use the CDI runtime class by default for workloads.
+Optionally, also specify the ``--set cdi.default=true`` argument to use the CDI runtime class by default for all pods.
 
 
 **********************************
