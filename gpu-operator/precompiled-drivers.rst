@@ -22,6 +22,10 @@
 Precompiled Driver Containers
 #############################
 
+.. contents::
+   :depth: 2
+   :local:
+   :backlinks: none
 
 ***********************************
 About Precompiled Driver Containers
@@ -48,13 +52,56 @@ Limitations and Restrictions
 ============================
 
 * Support for deploying the driver containers with precompiled drivers is limited to
-  hosts with Ubuntu 20.04 or 22.04 operating systems, x86_64 architecture, and
-  the ``generic`` kernel variant.
+  hosts with the Ubuntu 22.04 operating system and x86_64 architecture.
 
 * NVIDIA supports precompiled driver containers for the most recently released long-term
-  servicing branch (LTSB) driver branches 525 and 530.
+  servicing branch (LTSB) driver branch, 525.
+
+* NVIDIA builds images for the ``generic`` kernel variant.
+  If your hosts run a different kernel variant, you can build a precompiled driver image
+  and use your own container registry.
 
 * Precompiled driver containers do not support NVIDIA vGPU or GPUDirect Storage (GDS).
+
+
+**********************************************************
+Determining if a Precompiled Driver Container is Available
+**********************************************************
+
+Use one of the following ways to check if a driver container is available for your Linux kernel and driver branch:
+
+* Use a web browser to access the NVIDIA GPU Driver page of the NVIDIA GPU Cloud registry at
+  https://catalog.ngc.nvidia.com/orgs/nvidia/containers/driver/tags.
+  Use the search field to filter the tags by your operating system version.
+
+* Use the `NGC CLI <https://ngc.nvidia.com/setup/installers/cli>`_ tool to list the tags for the driver container:
+
+  .. code-block:: console
+
+     $ ngc registry image info nvidia/driver
+
+  *Example Output*
+
+  .. code-block:: output
+
+     Image Repository Information
+       Name: driver
+       Display Name: NVIDIA GPU Driver
+       Short Description: Provision NVIDIA GPU Driver as a Container.
+       Built By: NVIDIA
+       Publisher: NVIDIA
+       Multinode Support: False
+       Multi-Arch Support: True
+       Logo: https://assets.nvidiagrid.net/ngc/logos/Infrastructure.png
+       Labels: NVIDIA AI Enterprise Supported, ARM, Kubernetes, Multi-Arch, X86, Infrastructure
+       Public: Yes
+       Last Updated: Mar 30, 2023
+       Latest Image Size: 620.18 MB
+       Latest Tag: 525.105.17-rhel8.7
+       Tags:
+           525.105.17-rhel8.7
+           525.105.17-rhel8.6
+       ...
 
 
 *****************************************************************
@@ -152,8 +199,139 @@ Perform the following steps to disable support for precompiled driver containers
    Ensure that the pod names do not include a Linux kernel semantic version number.
 
 
-**********************************************************
-Determining if a Precompiled Driver Container is Available
-**********************************************************
+****************************************
+Building a Custom Driver Container Image
+****************************************
 
-.. include:: common-precompiled-check.rst
+If a precompiled driver container for your Linux kernel variant is not available,
+you can perform the following steps to build and run a container image.
+
+.. note::
+
+   NVIDIA provides limited support for custom driver container images.
+
+.. rubric:: Prerequisites
+
+* You have access to a private container registry, such as NVIDIA NGC Private Registry, and can push container images to the registry.
+* Your build machine has access to the internet to download operating system packages.
+* You know a CUDA version, such as ``12.1.0``, that you want to use.
+  The CUDA version only specifies which base image is used to build the driver container.
+  The version does not have any correlation to the version of CUDA that is associated with or supported by the resulting driver container.
+
+  One way to find a supported CUDA version for your operating system is to access the NVIDIA GPU Cloud registry
+  at https://catalog.ngc.nvidia.com/orgs/nvidia/containers/cuda/tags and view the tags.
+  Use the search field to filter the tags, such as ``base-ubuntu22.04``.
+  The filtered results show the CUDA versions, such as ``12.1.0``, ``12.0.1``, ``12.0.0``, and so on.
+* You know the GPU driver branch, such as ``525``, that you want to use.
+* You know the GPU driver version for the driver branch, such as ``525.85.12``.
+
+  One way to find the driver version is to run the following command on a worker machine or other host with
+  the same operating system as the worker machine:
+
+  .. code-block:: console
+
+     $ apt-cache show nvidia-utils-${DRIVER_BRANCH}-server | grep Version | awk '{print $2}' | cut -d'-' -f1 | head -n 1
+
+  *Example Output*
+
+  .. code-block:: output
+
+     525.85.12
+
+.. rubric:: Procedure
+
+#. Clone the driver container repository and change directory into the repository:
+
+   .. code-block:: console
+
+      $ git clone https://gitlab.com/nvidia/container-images/driver
+
+   .. code-block:: console
+
+      $ cd driver
+
+#. Change directory to the operating system name and version under the driver directory:
+
+   .. code-block:: console
+
+      $ cd ubuntu22.04/precompiled
+
+#. Set environment variables for building the driver container image.
+
+   -  Specify your private registry URL:
+
+      .. code-block:: console
+
+         $ export PRIVATE_REGISTRY=<private-registry-url>
+
+   - Specify the ``KERNEL_VERSION`` environment variable that matches your kernel variant, such as ``5.15.0-1033-aws``:
+
+     .. code-block:: console
+
+        $ export KERNEL_VERSION=5.15.0-1033-aws
+
+   - Specify the version of the CUDA base image to use when building the driver container:
+
+     .. code-block:: console
+
+        $ export CUDA_VERSION=12.1.0
+
+   - Specify the driver branch, such as ``525``:
+
+     .. code-block:: console
+
+        $ export DRIVER_BRANCH=525
+
+   - Specify the driver version, such as ``525.85.12``:
+
+     .. code-block:: console
+
+        $ export DRIVER_VERSION=525.85.12
+
+   - Specify the ``OS_TAG`` environment variable to identify the guest operating system name and version:
+
+     .. code-block:: console
+
+        $ export OS_TAG=ubuntu22.04
+
+     The value must match the guest operating system version.
+
+#. Build the driver container image:
+
+   .. code-block:: console
+
+      $ sudo docker build \
+          --build-arg KERNEL_VERSION=$KERNEL_VERSION \
+          --build-arg CUDA_VERSION=$CUDA_VERSION \
+          --build-arg DRIVER_BRANCH=$DRIVER_BRANCH \
+          -t ${PRIVATE_REGISTRY}/driver:${DRIVER_VERSION}-${KERNEL_VERSION}-${OS_TAG} .
+
+#. Push the driver container image to your private registry.
+
+   - Log in to your private registry:
+
+     .. code-block:: console
+
+        $ sudo docker login ${PRIVATE_REGISTRY} --username=<username>
+
+     Enter your password when prompted.
+
+   - Push the driver container image to your private registry:
+
+     .. code-block:: console
+
+        $ sudo docker push ${PRIVATE_REGISTRY}/driver:${DRIVER_VERSION}-${KERNEL_VERSION}-${OS_TAG}
+
+.. rubric:: Next Steps
+
+* To use the custom driver container image, follow the steps for enabling support during or after installation.
+
+  If you have not already installed the GPU Operator, in addition to the ``--set driver.usePrecompiled=true`` argument
+  for Helm, also specify the ``--set driver.repository="$PRIVATE_REGISTRY"`` argument.
+
+  If you already installed the GPU Operator, specify the private registry for the driver in the cluster policy:
+
+  .. code-block:: console
+
+     $ kubectl patch clusterpolicy/cluster-policy --type='json' \
+         -p='[{"op": "replace", "path": "/spec/driver/repository", "value":"$PRIVATE_REGISTRY"}]'

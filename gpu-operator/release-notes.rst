@@ -32,6 +32,7 @@ New Features
   to compile the driver.
   For more information, see :doc:`precompiled-drivers`.
 
+  This feature replaces the functionality that was previously available with the precompiled and Canonical signed drivers.
 
 ----
 

@@ -71,6 +71,14 @@ The following options are available when using the Helm chart. These options can
      - Description
      - Default
 
+   * - ``daemonsets.annotations``
+     - Map of custom annotations to add to all GPU Operator managed pods.
+     - ``{}``
+
+   * - ``daemonsets.labels``
+     - Map of custom labels to add to all GPU Operator managed pods.
+     - ``{}``
+
    * - ``driver.enabled``
      - By default, the Operator deploys NVIDIA drivers as a container on the system.
        Set this value to ``false`` when using the Operator on systems with pre-installed drivers.
@@ -116,17 +124,9 @@ The following options are available when using the Helm chart. These options can
        Set this variable to ``false`` if NFD is already running in the cluster.
      - ``true``
 
-   * - ``operator.annotations``
-     - Map of custom annotations that will be added to all GPU Operator managed pods.
-     - ``{}``
-
    * - ``operator.defaultRuntime``
      - **DEPRECATED as of v1.9**
      - ``docker``
-
-   * - ``operator.labels``
-     - Map of custom labels that will be added to all GPU Operator managed pods.
-     - ``{}``
 
    * - ``psp.enabled``
      - The GPU operator deploys ``PodSecurityPolicies`` if enabled.
