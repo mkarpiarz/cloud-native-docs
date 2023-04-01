@@ -74,12 +74,11 @@ When you install the Operator with Helm, specify the ``--set cdi.enabled=true`` 
 Optionally, also specify the ``--set cdi.default=true`` argument to use the CDI runtime class by default for all pods.
 
 
-**********************************
-Configuring CDI After Installation
-**********************************
+*******************************
+Enabling CDI After Installation
+*******************************
 
-Prerequisites
-=============
+.. rubric:: Prerequisites
 
 * You installed version 22.3.0 or newer.
 * (Optional) Confirm that the only runtime class is ``nvidia`` by running the following command:
@@ -96,8 +95,7 @@ Prerequisites
      nvidia   nvidia    47h
 
 
-Procedure
-=========
+.. rubric:: Procedure
 
 To enable CDI support, perform the following steps:
 
@@ -151,13 +149,69 @@ To enable CDI support, perform the following steps:
       :language: output
 
 
-**************************************
-Specifying the Runtime Class for a Pod
-**************************************
+*************
+Disabling CDI
+*************
 
-If you enabled CDI mode for the default container runtime, then you can use the
-following procedure to specify the legacy mode for a workload if you experience
-trouble.
+To disable CDI support, perform the following steps:
+
+#. If your nodes use the CRI-O container runtime, then temporarily disable the
+   GPU Operator validator:
+
+   .. code-block:: console
+
+      $ kubectl label nodes \
+          nvidia.com/gpu.deploy.operator-validator=false \
+          -l nvidia.com/gpu.present=true \
+          --overwrite
+
+   .. tip::
+
+      You can run ``kubectl get nodes -o wide`` and view the ``CONTAINER-RUNTIME``
+      column to determine if your nodes use CRI-O.
+
+#. Disable CDI by modifying the cluster policy:
+
+   .. code-block:: console
+
+      $ kubectl patch clusterpolicy/cluster-policy --type='json' \
+          -p='[{"op": "replace", "path": "/spec/cdi/enabled", "value":false}]'
+
+   *Example Output*
+
+   .. code-block:: output
+
+      clusterpolicy.nvidia.com/cluster-policy patched
+
+#. If you temporarily disabled the GPU Operator validator, re-enable the validator:
+
+   .. code-block:: console
+
+      $ kubectl label nodes \
+          nvidia.com/gpu.deploy.operator-validator=true \
+          nvidia.com/gpu.present=true
+
+#. (Optional) Verify that the ``nvidia-cdi`` and ``nvidia-legacy`` runtime classes
+   are no longer available:
+
+   .. code-block:: console
+
+      $ kubectl get runtimeclass
+
+   *Example Output*
+
+   .. code-block:: output
+
+      NAME     HANDLER   AGE
+      nvidia   nvidia    11d
+
+
+************************************************
+Optional: Specifying the Runtime Class for a Pod
+************************************************
+
+If you enabled CDI mode for the default container runtime, the no action is required to use CDI.
+However, you can use the following procedure to specify the legacy mode for a workload if you experience trouble.
 
 If you did not enable CDI mode for the default container runtime, then you can
 use the following procedure to verify that CDI is enabled and as a
@@ -218,3 +272,11 @@ routine practice to use the CDI mode of the container runtime.
 
     namespace "demo" deleted
 
+
+*******************
+Related Information
+*******************
+
+* For more information about CDI, see the container device interface
+  `repository <https://github.com/container-orchestrated-devices/container-device-interface>`_
+  on GitHub.
