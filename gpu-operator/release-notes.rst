@@ -60,21 +60,94 @@ New Features
 Improvements
 ------------
 
-* FIXME
+* The upgrade process for the GPU driver is enhanced.
+  This release introduces a ``maxUnavailable`` field that you can use to specify
+  the number of nodes that can be unavailable during an upgrade.
+  The value can be an integer or a string that specifies a percentage.
+  If you specify a percentage, the number of nodes is calculated by rounding up.
+  The default value is ``25%``.
+
+  If you specify a value for ``maxUnavailable`` and also specify ``maxParallelUpgrades``,
+  the field that results in fewer nodes is used.
+  For example, if you specify ``maxUnavailable=100%`` and ``maxParallelUpgrades=1``,
+  one node at a time is upgraded.
+
+* In previous releases, when you upgrade the GPU driver, the Operator validator
+  pod could fail to complete all the validation checks.
+  As a result, the node could remain in the validation required state indefinitely
+  and prevent performing the driver upgrade on the other nodes in the cluster.
+  This release adds a ``600`` second timeout for the validation process.
+  If the validation does not complete successfully within the duration, the node is
+  labelled ``upgrade-failed`` and the upgrade process proceeds on other nodes.
+
+* The Multi-Instance GPU (MIG) manager is enhanced to support setting an initial
+  value for the ``nvidia.com/mig.config`` node annotation.
+  On nodes with MIG-capable GPUs that do not already have the annotation set, the
+  value is set to ``all-disabled`` and the MIG manager does not create MIG devices.
+  The value is overwritten when you label the node with a MIG profile.
+  For configuration information, see :doc:`gpu-operator-mig`.
 
 
 Fixed issues
 ------------
 
+* Fixed an issue that prevented building the GPU driver container when a :ref:`Local Package Repository`
+  is used.
+  Previously, if you needed to provide CA certificates, the certificates were not installed correctly.
+  The certificates are now installed in the correct directories.
+
+* Fixed an issue that created audit log records related to deprecated API requests for pod security policy.
+  on Red Hat OpenShift Container Platform.
+  Refer to GitHub `issue #451 <https://github.com/NVIDIA/gpu-operator/issues/451>`_
+  and `issue #490 <https://github.com/NVIDIA/gpu-operator/issues/490>`_ for more details.
+
+* Fixed an issue that caused the Operator to attempt to add a pod security policy on pre-release versions
+  of Kubernetes v1.25.
+  Refer to GitHub `issue #484 <https://github.com/NVIDIA/gpu-operator/issues/484>`_ for more details.
+
+* Fixed an issue that prevented adding Node Feature Discovery pods on worker nodes with VMWare Tanzu when
+  pod security policy is enabled.
+  The resolution is to declare a service account that is named ``node-feature-discovery`` on the worker nodes.
+
+* Fixed a race condition that is related to preinstalled GPU drivers, validator pods, and the device plugin pods.
+  The race condition can cause the device plugin pods to set the wrong path to the GPU driver.
+  Refer to GitHub `issue #508 <https://github.com/NVIDIA/gpu-operator/issues/508>`_ for more details.
+
+* Fixed an issue with the driver manager that prevented the manager from accurately detecting whether a
+  node has preinstalled GPU drivers.
+  This issue can appear if preinstalled GPU drivers were initially installed and later removed.
+  The resolution is for the manager to check that the ``nvidia-smi`` file exists on the host
+  and to check the output from executing the file.
+
+* Fixed an issue that prevented adding custom annotations to daemon sets that the Operator starts.
+  Refer to GitHub `issue #499 <https://github.com/NVIDIA/gpu-operator/issues/499>`_ for more details.
+
+* Fixed an issue that is related to not starting the GPU Feature Discovery (GFD) pods when the DCGM Exporter
+  service monitor is enabled, but a service monitor custom resource definition does not exist.
+  Previously, there was no log record to describe why the GFD pods were not started.
+  In this release, the Operator logs the error ``Couldn't find ServiceMonitor CRD`` and the
+  message ``Install Prometheus and necessary CRDs for gathering GPU metrics`` to indicate
+  the reason.
+
+* Fixed a race condition that prevented the GPU driver containers from loading the nvidia-peermem Linux kernel module
+  and caused the driver daemon set pods to crash loop back off.
+  The condition could occur when both GPUDirect RDMA and GPUDirect Storage are enabled.
+  In this release, the start script for the driver containers confirm that Operator validator
+  indicates the driver container is ready before attempting to load the kernel module.
+
+* Fixed an issue that caused upgrade of the GPU driver to fail when GPUDirect Storage is enabled.
+  In this release, the driver manager unloads the nvidia-fs Linux kernel module before
+  performing the upgrade.
+
 * Added support for new MIG profiles with the 525 driver.
 
-  * For A100-40GB and A800-40GB devices:
+  * For A100-40GB devices:
 
     * ``1g.5gb.me``
     * ``1g.10gb``
     * ``4g.20gb``
 
-  * For H100-80GB, H800-80GB, A100-80GB, and A800-80GB devices:
+  * For H100-80GB and A100-80GB devices:
 
     * ``1g.10gb``
     * ``1g.10gb.me``
@@ -93,6 +166,7 @@ Common Vulnerabilities and Exposures (CVEs)
 Known Limitations
 ------------------
 
+* Using NVIDIA vGPU on bare metal nodes and NVSwitch is not supported.
 * All worker nodes within the Kubernetes cluster must use the same operating system version.
 * NVIDIA GPUDirect Storage (GDS) is not supported with secure boot enabled systems.
 * Driver Toolkit images are broken with Red Hat OpenShift version ``4.11.12`` and require cluster-level entitlements to be enabled
