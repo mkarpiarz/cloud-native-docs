@@ -174,6 +174,12 @@ Fixed issues
 Common Vulnerabilities and Exposures (CVEs)
 -------------------------------------------
 
+The ``gpu-operator:v23.3.0`` and ``gpu-operator-validator:v23.3.0`` images have the following known high-vulnerability CVEs.
+These CVEs are from the base images and are not in libraries that are used by the GPU operator:
+
+* ``openssl-libs`` - `CVE-2023-0286 <https://access.redhat.com/security/cve/CVE-2023-0286>`_
+* ``platform-python`` and ``python3-libs`` - `CVE-2023-24329 <https://access.redhat.com/security/cve/CVE-2023-24329>`_
+
 
 Known Limitations
 ------------------
@@ -438,7 +444,7 @@ Improvements
 
 Fixed issues
 ------------
-* Fixed an issue when GPU Operator was installed and MIG was already enabled on a GPU. The GPU Operator will now install sucessfully and MIG can either be disabled via the label ``nvidia.com/mig.config=all-disabled`` or configured with the required MIG profiles.
+* Fixed an issue when GPU Operator was installed and MIG was already enabled on a GPU. The GPU Operator will now install successfully and MIG can either be disabled via the label ``nvidia.com/mig.config=all-disabled`` or configured with the required MIG profiles.
 
 Known Limitations
 ------------------
@@ -829,7 +835,7 @@ Improvements
 -------------
 * Updated DCGM-Exporter to ``2.1.2``, which uses DCGM 2.0.13.
 * Added the ability to pass arguments to the NVIDIA device plugin to enable ``migStrategy`` and ``deviceListStrategy`` flags
-  that allow addtional configuration of the plugin.
+  that allow additional configuration of the plugin.
 * Added more resiliency to ``dcgm-exporter``- ``dcgm-exporter`` would not check whether GPUs support profiling metrics and would result in a ``CrashLoopBackOff``
   state at launch in these configurations.
 
