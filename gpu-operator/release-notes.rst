@@ -36,7 +36,7 @@ See the :ref:`GPU Operator Component Matrix` for a list of components included i
 23.3.1
 ======
 
-This release provides a packaging-only update to the 23.3.0 release to fix installation on Red Hat OpenShift Container Platform. Refer to GitHub `issue #513 <https://github.com/NVIDIA/gpu-operator/issues/513>`_. 
+This release provides a packaging-only update to the 23.3.0 release to fix installation on Red Hat OpenShift Container Platform. Refer to GitHub `issue #513 <https://github.com/NVIDIA/gpu-operator/issues/513>`_.
 
 23.3.0
 ======
@@ -66,7 +66,8 @@ New Features
   The :ref:`documentation for upgrading the Operator manually <operator-upgrades>`
   is updated to include applying the custom resource definitions for Node Feature Discovery.
 
-* Added support for running the NVIDIA GPU Operator in Amazon EKS and Google GKE.
+* Added support for running the NVIDIA GPU Operator in :doc:`Amazon EKS <amazon-eks>`
+  and :doc:`Google GKE <google-gke>`.
   You must configure the cluster with custom nodes that run a supported operating
   system, such as Ubuntu 22.04.
 
