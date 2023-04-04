@@ -490,11 +490,11 @@ Supported operating systems and NVIDIA GPU Drivers with GPUDirect Storage.
 +--------------------------------------------------+---------------------------+
 |                                                  | GPU Driver (GDS Driver)   |
 +==================================================+===========================+
-| Ubuntu 20.04 LTS with Network Operator 1.4       | 525.105.17 (2.14.13)      |
+| Ubuntu 20.04 LTS with Network Operator 1.4       | 525.105.17 (2.15.1)       |
 +--------------------------------------------------+---------------------------+
-| Ubuntu 22.04 LTS with Network Operator 1.4       | 525.105.17 (2.14.13)      |
+| Ubuntu 22.04 LTS with Network Operator 1.4       | 525.105.17 (2.15.1)       |
 +--------------------------------------------------+---------------------------+
-| Red Hat OpenShift Container Platform 4.11        | 525.105.17 (2.14.13)      |
+| Red Hat OpenShift Container Platform 4.11        | 525.105.17 (2.15.1)       |
 +--------------------------------------------------+---------------------------+
 
 .. note::

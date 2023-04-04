@@ -97,10 +97,10 @@ Refer to :ref:`upgrade` for information about upgrading the Operator.
         - `0.8.0 <https://github.com/NVIDIA/gpu-feature-discovery/releases>`_
         - `0.5.2 <https://github.com/NVIDIA/mig-parted/tree/main/deployments/gpu-operator>`_
         - | `3.1.7-1 <https://docs.nvidia.com/datacenter/dcgm/latest/release-notes/changelog.html>`_ (default),
-        - v22.3.0
+        - v23.3.0
         - `v1.2.1 <https://github.com/NVIDIA/kubevirt-gpu-device-plugin>`_
         - v0.2.1
-        - `2.14.13 <https://github.com/NVIDIA/gds-nvidia-fs/releases>`_
+        - `2.15.1 <https://github.com/NVIDIA/gds-nvidia-fs/releases>`_
 
       * - v22.9.2
         - | `525.85.12 <https://docs.nvidia.com/datacenter/tesla/tesla-release-notes-525-85-12/index.html>`_ (recommended),
