@@ -40,6 +40,17 @@ See the :ref:`GPU Operator Component Matrix` for a list of components included i
 New Features
 ------------
 
+* Added support for the NVIDIA Data Center GPU Driver version 525.105.17.
+  Refer to the :ref:`GPU Operator Component Matrix`
+  on the platform support page.
+
+* Added support for GPUDirect Storage with Red Hat OpenShift Container Platform 4.11.
+  Refer to :ref:`Support for GPUDirect Storage` on the platform support page.
+
+* Added support for Canonical MicroK8s v1.26.
+  Refer to :ref:`Supported Operating Systems and Kubernetes Platforms`
+  on the platform support page.
+
 * Added support for the Container Device Interface (CDI) that is implemented by the
   NVIDIA Container Toolkit v1.13.0.
   Refer to :ref:`gpu-operator-helm-chart-options` for information about the ``cdi.enable`` and
@@ -54,8 +65,6 @@ New Features
   to compile the driver.
   For more information, see :doc:`precompiled-drivers`.
 
-  This feature replaces the functionality that was previously available with the precompiled and Canonical signed drivers.
-
 
 Improvements
 ------------
@@ -68,7 +77,9 @@ Improvements
   The default value is ``25%``.
 
   If you specify a value for ``maxUnavailable`` and also specify ``maxParallelUpgrades``,
-  the field that results in fewer nodes is used.
+  the ``maxUnavailable`` value applies an additional constraint on the value of
+  ``maxParallelUpgrades`` to ensure that the number of parallel upgrades does not
+  cause more than the intended number of nodes to become unavailable during the upgrade.
   For example, if you specify ``maxUnavailable=100%`` and ``maxParallelUpgrades=1``,
   one node at a time is upgraded.
 
@@ -95,6 +106,7 @@ Fixed issues
   is used.
   Previously, if you needed to provide CA certificates, the certificates were not installed correctly.
   The certificates are now installed in the correct directories.
+  Refer to GitHub `issue #299 <https://github.com/NVIDIA/gpu-operator/issues/299>`_ for more details.
 
 * Fixed an issue that created audit log records related to deprecated API requests for pod security policy.
   on Red Hat OpenShift Container Platform.
@@ -104,10 +116,6 @@ Fixed issues
 * Fixed an issue that caused the Operator to attempt to add a pod security policy on pre-release versions
   of Kubernetes v1.25.
   Refer to GitHub `issue #484 <https://github.com/NVIDIA/gpu-operator/issues/484>`_ for more details.
-
-* Fixed an issue that prevented adding Node Feature Discovery pods on worker nodes with VMWare Tanzu when
-  pod security policy is enabled.
-  The resolution is to declare a service account that is named ``node-feature-discovery`` on the worker nodes.
 
 * Fixed a race condition that is related to preinstalled GPU drivers, validator pods, and the device plugin pods.
   The race condition can cause the device plugin pods to set the wrong path to the GPU driver.
@@ -167,6 +175,11 @@ Known Limitations
 ------------------
 
 * Using NVIDIA vGPU on bare metal nodes and NVSwitch is not supported.
+* When installing the Operator on Amazon EKS and using Kubernetes versions lower than
+  ``1.25``, specify the ``--set psp.enabled=true`` Helm argument because EKS enables
+  pod security policy (PSP).
+  If you use Kubernetes version ``1.25`` or higher, do not specify the ``psp.enabled``
+  argument so that the default value, ``false``, is used.
 * All worker nodes within the Kubernetes cluster must use the same operating system version.
 * NVIDIA GPUDirect Storage (GDS) is not supported with secure boot enabled systems.
 * Driver Toolkit images are broken with Red Hat OpenShift version ``4.11.12`` and require cluster-level entitlements to be enabled
