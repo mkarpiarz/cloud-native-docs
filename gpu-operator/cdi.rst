@@ -189,7 +189,8 @@ To disable CDI support, perform the following steps:
 
       $ kubectl label nodes \
           nvidia.com/gpu.deploy.operator-validator=true \
-          nvidia.com/gpu.present=true
+          nvidia.com/gpu.present=true \
+          --overwrite
 
 #. (Optional) Verify that the ``nvidia-cdi`` and ``nvidia-legacy`` runtime classes
    are no longer available:
@@ -210,7 +211,7 @@ To disable CDI support, perform the following steps:
 Optional: Specifying the Runtime Class for a Pod
 ************************************************
 
-If you enabled CDI mode for the default container runtime, the no action is required to use CDI.
+If you enabled CDI mode for the default container runtime, then no action is required to use CDI.
 However, you can use the following procedure to specify the legacy mode for a workload if you experience trouble.
 
 If you did not enable CDI mode for the default container runtime, then you can
