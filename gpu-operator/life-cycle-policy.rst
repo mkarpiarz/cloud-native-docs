@@ -93,11 +93,11 @@ Refer to :ref:`upgrade` for information about upgrading the Operator.
         - `1.13.0 <https://github.com/NVIDIA/nvidia-container-toolkit/releases>`_
         - `0.14.0 <https://github.com/NVIDIA/k8s-device-plugin/releases>`_
         - `3.1.7-3.1.4 <https://github.com/NVIDIA/gpu-monitoring-tools/releases>`_
-        -  v0.10.1
+        -  v0.12.1
         - `0.8.0 <https://github.com/NVIDIA/gpu-feature-discovery/releases>`_
         - `0.5.2 <https://github.com/NVIDIA/mig-parted/tree/main/deployments/gpu-operator>`_
         - | `3.1.7-1 <https://docs.nvidia.com/datacenter/dcgm/latest/release-notes/changelog.html>`_ (default),
-        - v22.9.1
+        - v22.3.0
         - `v1.2.1 <https://github.com/NVIDIA/kubevirt-gpu-device-plugin>`_
         - v0.2.1
         - `2.14.13 <https://github.com/NVIDIA/gds-nvidia-fs/releases>`_
