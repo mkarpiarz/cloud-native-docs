@@ -51,6 +51,10 @@ New Features
   Refer to :ref:`Supported Operating Systems and Kubernetes Platforms`
   on the platform support page.
 
+* Added support for running the NVIDIA GPU Operator in Amazon EKS and Google GKE.
+  You must configure the cluster with custom nodes that run a supported operating
+  system, such as Ubuntu 22.04.
+
 * Added support for the Container Device Interface (CDI) that is implemented by the
   NVIDIA Container Toolkit v1.13.0.
   Refer to :ref:`gpu-operator-helm-chart-options` for information about the ``cdi.enable`` and
