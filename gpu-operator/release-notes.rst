@@ -17,39 +17,6 @@ See the :ref:`Component Matrix<operator-component-matrix>` for a list of compone
 
 ----
 
-Unreleased changes
-==================
-
-New Features
-------------
-
-* Added support for the Container Device Interface (CDI) that is implemented by the
-  NVIDIA Container Toolkit v1.13.0.
-  Refer to :ref:`gpu-operator-helm-chart-options` for information about the ``cdi.enable`` and
-  ``cdi.default`` options to enable CDI during installation
-  or :doc:`cdi` for post-installation configuration information.
-
-Improvements
-------------
-
-* FIXME
-
-Fixed issues
-------------
-
-* FIXME
-
-Common Vulnerabilities and Exposures (CVEs)
--------------------------------------------
-
-FIXME
-
-Known Limitations
-------------------
-
-* FIXME
-
-
 22.9.2
 ======
 
