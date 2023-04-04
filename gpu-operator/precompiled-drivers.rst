@@ -31,7 +31,7 @@ Precompiled Driver Containers
 About Precompiled Driver Containers
 ***********************************
 
-.. note:: Technology Preview features are not supported with in production environments
+.. note:: Technology Preview features are not supported in production environments
           and are not functionally complete.
           Technology Preview features provide early access to upcoming product features,
           enabling customers to test functionality and provide feedback during the development process.
@@ -67,6 +67,12 @@ Limitations and Restrictions
 **********************************************************
 Determining if a Precompiled Driver Container is Available
 **********************************************************
+
+The precompiled driver containers are named according to the following pattern:
+
+<driver-version>-<linux-kernel-version>-<os-tag>
+
+For example, ``515.105.17-5.15.0-56-generic-ubuntu22.04``.
 
 Use one of the following ways to check if a driver container is available for your Linux kernel and driver branch:
 
@@ -328,6 +334,9 @@ you can perform the following steps to build and run a container image.
 
   If you have not already installed the GPU Operator, in addition to the ``--set driver.usePrecompiled=true`` argument
   for Helm, also specify the ``--set driver.repository="$PRIVATE_REGISTRY"`` argument.
+
+  If the container registry is not public, you need to create an image pull secret in the GPU operator namespace
+  and specify it in the ``--set driver.imagePullSecrets=<pull-secret>`` argument.
 
   If you already installed the GPU Operator, specify the private registry for the driver in the cluster policy:
 

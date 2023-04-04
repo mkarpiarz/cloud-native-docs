@@ -17,25 +17,6 @@ See the :ref:`Component Matrix<operator-component-matrix>` for a list of compone
 
 ----
 
-23.3.0
-======
-
-
-New Features
--------------
-
-* Support for precompiled driver containers for select operating systems is added as a technology preview feature.
-  This feature removes the dynamic dependencies to build the driver during installation in the
-  cluster such as downloading kernel header packages and GCC tooling.
-  Sites with restricted internal access can benefit.
-  Sites with machines that are resource constrained can also benefit by removing the computational demand
-  to compile the driver.
-  For more information, see :doc:`precompiled-drivers`.
-
-  This feature replaces the functionality that was previously available with the precompiled and Canonical signed drivers.
-
-----
-
 22.9.2
 ======
 
