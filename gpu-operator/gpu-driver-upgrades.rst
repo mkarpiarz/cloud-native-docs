@@ -1,3 +1,19 @@
+.. license-header
+  SPDX-FileCopyrightText: Copyright (c) 2023 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+  SPDX-License-Identifier: Apache-2.0
+
+  Licensed under the Apache License, Version 2.0 (the "License");
+  you may not use this file except in compliance with the License.
+  You may obtain a copy of the License at
+
+  http://www.apache.org/licenses/LICENSE-2.0
+
+  Unless required by applicable law or agreed to in writing, software
+  distributed under the License is distributed on an "AS IS" BASIS,
+  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  See the License for the specific language governing permissions and
+  limitations under the License.
+
 .. Date: Jan 30 2023
 .. Author: cdesiniotis
 
@@ -83,7 +99,12 @@ The following fields in ClusterPolicy are available to configure the upgrade con
        autoUpgrade: true
        # maxParallelUpgrades (default=1): Number of nodes that can be upgraded in parallel. 0 means infinite.
        maxParallelUpgrades: 1
-
+       # maximum number of nodes with the driver installed, that can be unavailable during
+       # the upgrade. Value can be an absolute number (ex: 5) or
+       # a percentage of total nodes at the start of upgrade (ex:
+       # 10%). Absolute number is calculated from percentage by rounding
+       # up. By default, a fixed value of 25% is used.'
+       maxUnavailable: 25%
        # waitForCompletion: Options for the 'wait-for-completion' state, which will wait for a user-defined group of pods
        #    to complete before upgrading the driver on a node.
        waitForCompletion:
@@ -275,7 +296,7 @@ GPU pod eviction / node drain behavior.
 
    Since GPU pods get evicted whenever the NVIDIA Driver Daemonset spec is updated, it may not always be desirable to allow this to happen automatically.
    To prevent this ``daemonsets.updateStrategy`` parameter in the ``ClusterPolicy`` can be set to `OnDelete <https://kubernetes.io/docs/tasks/manage-daemon/update-daemon-set/#daemonset-update-strategy>`_ .
-   With ``OnDelete`` update strategy, a new driver pod with the updated spec will only get deployed on a node once the old driver pod is manually deleted. 
-  Thus, admins can control when to rollout spec updates to driver pods on any given node. 
+   With ``OnDelete`` update strategy, a new driver pod with the updated spec will only get deployed on a node once the old driver pod is manually deleted.
+  Thus, admins can control when to rollout spec updates to driver pods on any given node.
   For more information on DaemonSet update strategies, refer to the `Kubernetes documentation <https://kubernetes.io/docs/tasks/manage-daemon/update-daemon-set/#daemonset-update-strategy>`_.
 
