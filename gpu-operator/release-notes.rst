@@ -33,6 +33,11 @@ See the :ref:`GPU Operator Component Matrix` for a list of components included i
 
 ----
 
+23.3.1
+======
+
+This release provides a packaging-only update to the 23.3.0 release to support installation on Red Hat OpenShift Container Platform.
+
 23.3.0
 ======
 
