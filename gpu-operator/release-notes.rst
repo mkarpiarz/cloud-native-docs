@@ -56,9 +56,10 @@ New Features
   on the platform support page.
 
 * Added support for Node Feature Discovery v0.12.1.
-  This release adds support for the using the NodeFeature API.
+  This release adds support for using the NodeFeature API CRD for labelling nodes
+  instead of labelling nodes over gRPC.
   The :ref:`documentation for upgrading the Operator manually <operator-upgrades>`
-  is updated to include applying the custom resource definition for Node Feature Discovery.
+  is updated to include applying the custom resource definitions for Node Feature Discovery.
 
 * Added support for running the NVIDIA GPU Operator in Amazon EKS and Google GKE.
   You must configure the cluster with custom nodes that run a supported operating
