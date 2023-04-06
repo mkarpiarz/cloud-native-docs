@@ -44,6 +44,11 @@ When you create the unmanaged node group, you specify the Amazon EKS optimized
 Amazon Machine Image (AMI) that is specific to an AWS region and Kubernetes version.
 See https://cloud-images.ubuntu.com/aws-eks/ for the AMI values such as ``ami-00687acd80b7a620a``.
 
+By selecting the AMI, you can customize which NVIDIA software components are
+installed by the GPU Operator at deployment time.
+For example, the Operator can deploy GPU driver containers and use the Operator
+to manage the lifecycle of the NVIDIA software components.
+
 
 *************
 Prerequisites

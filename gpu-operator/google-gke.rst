@@ -40,6 +40,11 @@ To use a supported operating system, such as Ubuntu 22.04 or 20.04, configure yo
 GKE cluster entirely with Ubuntu containerd nodes images or with a node pool
 that uses Ubuntu containerd node images.
 
+By selecting a supported operating system rather than Container-Optimized OS with Containerd,
+you can customize which NVIDIA software components are installed by the GPU Operator at deployment time.
+For example, the Operator can deploy GPU driver containers and use the Operator
+to manage the lifecycle of the NVIDIA software components.
+
 
 *************
 Prerequisites
@@ -93,7 +98,7 @@ The steps create the cluster with a node pool that uses a Ubuntu and containerd 
           --default-max-pods-per-node "110" \
           --no-enable-master-authorized-networks \
           --tags=nvidia-ingress-all
-    
+
     Creating the cluster requires several minutes.
 
 #. Get the authentication credentials for the cluster:
@@ -137,7 +142,7 @@ The steps create the cluster with a node pool that uses a Ubuntu and containerd 
    .. code-block:: output
 
       NAME                  AGE     REQUEST
-      gke-resource-quotas   6m56s   count/ingresses.extensions: 0/100, count/ingresses.networking.k8s.io: 0/100, count/jobs.batch: 0/5k, pods: 2/1500, services: 1/500   
+      gke-resource-quotas   6m56s   count/ingresses.extensions: 0/100, count/ingresses.networking.k8s.io: 0/100, count/jobs.batch: 0/5k, pods: 2/1500, services: 1/500
       gpu-operator-quota    38s     pods: 0/100
 
 

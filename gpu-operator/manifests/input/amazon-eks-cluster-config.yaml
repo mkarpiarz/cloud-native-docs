@@ -8,7 +8,7 @@ nodeGroups:
   - name: demo-gpu-workers
     instanceType: g4dn.xlarge
     ami: ami-0770ab88ec35aa875
-    amiFamily: Ubuntu 2004
+    amiFamily: Ubuntu2004
     desiredCapacity: 3
     overrideBootstrapCommand: |
       #!/bin/bash
