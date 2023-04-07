@@ -9,3 +9,4 @@ repos:
     rev: v2.2.2
     hooks:
     - id: codespell
+      args: ["--ignore-words=.codespell_ignore_words.txt"]

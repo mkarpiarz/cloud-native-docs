@@ -44,6 +44,7 @@ using NVIDIA GPUs with Kubernetes.
    gpu-operator/gpu-operator-rdma.rst
    gpu-operator/gpu-operator-kubevirt.rst
    gpu-operator/appendix.rst
+   Self-Validated Configurations <gpu-operator/self-validated/index.rst>
    gpu-operator/archive.rst
 
 .. toctree::
