@@ -9,7 +9,10 @@ nodeGroups:
     instanceType: g4dn.xlarge
     ami: ami-0770ab88ec35aa875
     amiFamily: Ubuntu2004
+    minSize: 1
     desiredCapacity: 3
+    maxSize: 3
+    volumeSize: 100
     overrideBootstrapCommand: |
       #!/bin/bash
       source /var/lib/cloud/scripts/eksctl/bootstrap.helper.sh
