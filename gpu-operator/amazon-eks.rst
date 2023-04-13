@@ -57,6 +57,8 @@ EKS Node Group with the GPU Operator
 To overcome the limitations with the first approach, you can create a node group for your cluster.
 Configure the node group with instance types that have
 NVIDIA GPUs and use an AMI with an operating system that the GPU Operator supports.
+The Operator does not support a mix of some nodes running Amazon Linux 2 and others
+running a supported operating system in the same cluster.
 
 In this case, the Operator manages the lifecycle of all the operands, including
 the NVIDIA GPU driver containers.
@@ -101,20 +103,33 @@ without any limitations, you perform the following high-level actions:
 
 * Create a self-managed or managed node group with instance types that have NVIDIA GPUs.
 
-  Refer to the table of `Accelerated Computing <https://aws.amazon.com/ec2/instance-types/#Accelerated_Computing>`_
-  instance types in the Amazon EC2 documentation.
+  Refer to the following resources in the Amazon EC2 documentation to help you choose
+  the instance type to meet your needs:
 
-* Use an Amazon EKS optimized Amazon Machine Image (AMI) with a supported operating system,
-  such as Ubuntu 20.04, on the nodes in the node group.
+  * Table of accelerated computing
+    `instance types <https://aws.amazon.com/ec2/instance-types/#Accelerated_Computing>`_
+    for information about GPU model and count, RAM, and storage.
+
+  * Table of
+    `maximum network interfaces <https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/using-eni.html#enis-acceleratedcomputing>`_
+    for accelerated computing instance types.
+    Make sure the instance type supports enough IP addresses for your workload.
+    For example, the ``g4dn.xlarge`` instance type supports ``29`` IP addresses for pods on the node.
+
+* Use an Amazon EKS optimized Amazon Machine Image (AMI) with Ubuntu 20.04 or 22.04 on the nodes in the node group.
 
   AMIs support are specific to an AWS region and Kubernetes version.
   See https://cloud-images.ubuntu.com/aws-eks/ for the AMI values such as ``ami-00687acd80b7a620a``.
 
 * Use your preferred client application to create the node group.
 
-*************
+
+*****************************************************
+Example: Create a Self-Managed Node Group with eksctl
+*****************************************************
+
 Prerequisites
-*************
+=============
 
 * You have access to the Amazon Management Console or you installed and configured the AWS CLI.
   Refer to
@@ -127,9 +142,8 @@ Prerequisites
 * You have the EC2 instance type to use for your nodes.
 
 
-*****************************************************
-Example: Create a Self-Managed Node Group with eksctl
-*****************************************************
+Procedure
+=========
 
 The following steps show how to create an Amazon EKS cluster with the ``eksctl`` CLI.
 The steps create a self-managed node group that uses an Amazon EKS optimized AMI.
@@ -206,4 +220,5 @@ Related Information
 * If you have an existing Amazon EKS cluster, you can refer to
   `Launching self-managed Amazon Linux nodes <https://docs.aws.amazon.com/eks/latest/userguide/launch-workers.html>`_
   in the Amazon EKS documentation to add a self-managed node group to your cluster.
+  However, all nodes in the cluster must run Ubuntu 20.04 or 22.04.
   This documentation includes steps for using the AWS Management Console.
