@@ -145,7 +145,7 @@ These steps only need to be carried out if installing the **NVIDIA GPU Operator*
 
 Before mirroring the RPM packages check the version of RHEL being used in the cluster.
 
-#. To determine the RHEL version running on the cluster use the OpenShift CLI and run the following:
+-  To determine the RHEL version running on the cluster use the OpenShift CLI and run the following:
 
    .. code-block:: console
 
@@ -419,20 +419,19 @@ Configure a private registry on the the jump host, using the following steps:
 
    .. note:: For ``$JUMP_HOST_PORT``, specify the port that your mirror registry uses to serve content shown in the examples below as 5000.
 
-    **Example**:
+   **Example**:
 
-      .. code-block:: console
+   .. code-block:: console
 
-         $ firewall-cmd --add-port=5000/tcp --zone=internal --permanent
+      $ firewall-cmd --add-port=5000/tcp --zone=internal --permanent
 
-      .. code-block:: console
+   .. code-block:: console
 
-         $ firewall-cmd --add-port=5000/tcp --zone=public --permanent
+      $ firewall-cmd --add-port=5000/tcp --zone=public --permanent
 
-      .. code-block:: console
+   .. code-block:: console
 
-         $ firewall-cmd --reload
-
+      $ firewall-cmd --reload
 
 #. Add the self-signed certificate to your list of trusted certificates:
 
@@ -656,9 +655,9 @@ You can then use the mirrored index image to create a catalog source that allows
 Operator Lifecycle Manager (OLM) to load the mirrored catalog onto your
 OpenShift Container Platform cluster.
 
-**************
+
 Prerequisites
-**************
+=============
 
 * Download oc-mirror tools:
 
@@ -670,7 +669,7 @@ Prerequisites
 * Create ``pull-secret.json`` file:
   Create the ``pull-secret.json`` file, then copy the file to  ``~/.docker/config.json cp ~/pull-secret.json ~/.docker/config.json``.
 
-=========
+
 Procedure
 =========
 
@@ -706,9 +705,9 @@ Procedure
       $ oc-mirror list operators --catalog=registry.redhat.io/redhat/redhat-operator-index:v4.11 --version=4.11
 
 
-------------------------------------------------
+*****************************************************
 Mirror the Node Feature Discovery (NFD) CatalogSource
-------------------------------------------------
+*****************************************************
 
 #. Export ``JUMP_HOST=ec2-3-16-218-255.us-east-2.compute.amazonaws.com``:
 
@@ -860,11 +859,9 @@ Mirror the Node Feature Discovery (NFD) CatalogSource
       redhat-operator-index-gqvwn             1/1     Running   0          85s
 
 
-
-
-------------------------------------------------
+****************************
 Mirror the GPU CatalogSource
-------------------------------------------------
+****************************
 
 #. Check for the correct package name for the GPU Operator using the following commands:
 
@@ -925,30 +922,30 @@ Mirror the GPU CatalogSource
         - name: registry.redhat.io/ubi8/ubi:latest
         helm: {}
 
-  - To mirror only v22.9.0, make the same edits as the preceding example and also specify the ``minversion`` value:
+   - To mirror only v22.9.0, make the same edits as the preceding example and also specify the ``minversion`` value:
 
-    .. code-block:: yaml
-       :emphasize-lines: 16
+     .. code-block:: yaml
+        :emphasize-lines: 16
 
-       kind: ImageSetConfiguration
-       apiVersion: mirror.openshift.io/v1alpha2
-       storageConfig:
-         registry:
-           imageURL: ec2-3-16-218-255.us-east-2.compute.amazonaws.com:5000/oc-mirror-gpu-metadata
-         skipTLS: true
-       mirror:
-         platform:
-           channels:
-           - name: stable-4.12
-             type: ocp
-       operators:
-       - catalog: registry.redhat.io/redhat/certified-operator-index:v4.12
-         packages:
-         - name: gpu-operator-certified
-           minversion: "22.9.0"
-       additionalImages:
-       - name: registry.redhat.io/ubi8/ubi:latest
-       helm: {}
+        kind: ImageSetConfiguration
+        apiVersion: mirror.openshift.io/v1alpha2
+        storageConfig:
+          registry:
+            imageURL: ec2-3-16-218-255.us-east-2.compute.amazonaws.com:5000/oc-mirror-gpu-metadata
+          skipTLS: true
+        mirror:
+          platform:
+            channels:
+            - name: stable-4.12
+              type: ocp
+        operators:
+        - catalog: registry.redhat.io/redhat/certified-operator-index:v4.12
+          packages:
+          - name: gpu-operator-certified
+            minversion: "22.9.0"
+        additionalImages:
+        - name: registry.redhat.io/ubi8/ubi:latest
+        helm: {}
 
 #. Mirror the GPU Operator CatalogSource using the following command:
 
@@ -1033,15 +1030,14 @@ Install the Node Feature Discovery Operator
 
 Follow the guidance :ref:`here <install-nfd>` to install the **Node Feature Discovery (NFD) Operator**. If you are installing on any Openshift Container Platform version other than ``4.8.19``, ``4.8.21`` or ``4.9.8`` proceed to :ref:`install-gpu-noworkaround`.
 
-------------------------------------------------
 Optional: Configure repoConfig using Local Yum Repository
-------------------------------------------------
+=========================================================
 
 These steps only need to be carried out if installing the **NVIDIA GPU Operator** on OpenShift Container Platform version ``4.8.19``, ``4.8.21`` or ``4.9.8``.
 
 Carry on the following steps on the jump host when it is connected to the cluster.
 
-#. Create a Local-Base.repo as below:
+-  Create a Local-Base.repo as below:
 
    .. code-block:: console
 
@@ -1071,6 +1067,7 @@ Carry on the following steps on the jump host when it is connected to the cluste
       protect=1
       priority=1
       EOF
+
 ***************************************************************************************************
 Optional: Installing the NVIDIA GPU Operator on OpenShift version ``4.8.19``, ``4.8.21``, ``4.9.8``
 ***************************************************************************************************
