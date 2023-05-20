@@ -226,8 +226,7 @@ The GPU Operator has been validated in the following scenarios:
          -
 
        * - Ubuntu 20.04 LTS
-         - | 1.21, 1.22, 1,23
-           | 1.24, 1.25, 1.26
+         - 1.21---1.27
          -
          - 7.0 U3c, 8.0
          - | 1.21, 1.22, 1.23,
@@ -236,8 +235,7 @@ The GPU Operator has been validated in the following scenarios:
          -
 
        * - Ubuntu 22.04 LTS
-         - | 1.21, 1.22, 1,23
-           | 1.24, 1.25, 1.26
+         - 1.21---1.27
          -
          -
          -
