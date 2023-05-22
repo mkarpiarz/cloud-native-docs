@@ -78,6 +78,19 @@ Prerequisites
 
 * `Install the OpenShift Virtualization Operator <https://docs.openshift.com/container-platform/latest/virt/install/installing-virt-cli.html>`_.
 * `Install the virtctl client <https://docs.openshift.com/container-platform/latest/virt/install/virt-enabling-virtctl.html>`_.
+* For OpenShift Virtualization 4.12 and 4.13, set the ``DisableMDEVConfiguration`` feature gate:
+
+  .. code-block:: console
+
+     $ oc annotate --overwrite -n openshift-cnv hco kubevirt-hyperconverged \
+         kubevirt.kubevirt.io/jsonpatch='[{"op": "add", "path": "/spec/configuration/developerConfiguration/featureGates/-", "value": "DisableMDEVConfiguration" }]'
+
+  *Example Output*
+
+  .. code-block:: output
+
+     hyperconverged.hco.kubevirt.io/kubevirt-hyperconverged annotated
+
 
 
 *********************

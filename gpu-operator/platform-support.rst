@@ -253,8 +253,8 @@ The GPU Operator has been validated in the following scenarios:
 
        * - Red Hat Core OS
          -
-         - | 4.9, 4.10
-           | 4.11, 4.12
+         - | 4.9, 4.10, 4.11
+           | 4.12, 4.13
          -
          -
          -
@@ -286,6 +286,31 @@ The GPU Operator has been validated in the following scenarios:
     .. note::
 
       |ocp_csp_support|
+
+  .. tab:: Cloud Service Providers
+
+    .. list-table::
+       :header-rows: 1
+       :stub-columns: 1
+
+       * - | Operating
+           | System
+         - | Amazon EKS
+           | Kubernetes
+         - | Google GKE
+           | Kubernetes
+         - | Microsoft Azure
+           | Kubernetes Service
+
+       * - Ubuntu 20.04 LTS
+         - 1.25, 1.26
+         - 1.24, 1.25
+         - FIXME
+
+       * - Ubuntu 22.04 LTS
+         - 1.25, 1.26
+         - 1.24, 1.25
+         - FIXME
 
   .. tab:: Virtual Machines with NVIDIA vGPU
 
@@ -463,7 +488,7 @@ KubeVirt v0.36.0 is supported with the following operating systems and Kubernete
 
    * - Red Hat Core OS
      -
-     - 4.11
+     - 4.11, 4.13
 
 Support for GPUDirect RDMA
 --------------------------

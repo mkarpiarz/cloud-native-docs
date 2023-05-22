@@ -33,6 +33,56 @@ See the :ref:`GPU Operator Component Matrix` for a list of components included i
 
 ----
 
+23.3.2
+======
+
+New Features
+------------
+
+* Added support for Kubernetes v1.27 with Ubuntu 20.04 and 22.04.
+  Refer to :ref:`Supported Operating Systems and Kubernetes Platforms`
+  on the platform support page.
+
+* Added support for Red Hat OpenShift Container Platform 4.13.
+  Refer to :ref:`Supported Operating Systems and Kubernetes Platforms`
+  on the platform support page.
+
+* Added support for KubeVirt v0.59 and Red Hat OpenShift Virtualization 4.13.
+  You must perform a workaround by adding the ``DisableMDEVConfiguration``
+  feature gate to the configuration.
+  Refer to :ref:`Support for KubeVirt`
+  on the platform support page or
+  :ref:`NVIDIA GPU Operator with OpenShift Virtualization`.
+
+* Added support for CRI-0 v1.26 with Red Hat Enterprise Linux 8.7
+  and support for CRI-0 v1.27 with Ubuntu 20.04.
+
+
+Improvements
+------------
+
+* Increased the default timeout for the ``nvidia-smi`` command that is used by the
+  NVIDIA Driver Container startup probe and made the timeout configurable.
+  Previously, the timeout duration for the startup probe was ``30s``.
+  In this release, the default duration is ``60s``.
+  This change reduces the frequency of container restarts when ``nvidia-smi``
+  runs slowly.
+  Refer to :ref:`Chart Customization Options` for more information.
+
+
+Fixed issues
+------------
+
+* Fixed an issue with NVIDIA GPU Direct Storage (GDS) and Ubuntu 22.04.
+  The Operator was not able to deploy GDS and other daemon sets.
+
+  Previously, the Operator produced the following error log:
+
+  .. code-block:: output
+
+     {"level":"error","ts":1681889507.829097,"msg":"Reconciler error","controller":"clusterpolicy-controller","object":{"name":"cluster-policy"},"namespace":"","name":"cluster-policy","reconcileID":"c5d55183-3ce9-4376-9d20-e3d53dc441cb","error":"ERROR: failed to transform the Driver Toolkit Container: could not find the 'openshift-driver-toolkit-ctr' container"}
+
+
 23.3.1
 ======
 
