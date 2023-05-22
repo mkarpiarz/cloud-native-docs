@@ -50,8 +50,7 @@ New Features
 * Added support for KubeVirt v0.59 and Red Hat OpenShift Virtualization 4.13.
   You must perform a workaround by adding the ``DisableMDEVConfiguration``
   feature gate to the configuration.
-  Refer to :ref:`Support for KubeVirt`
-  on the platform support page or
+  Refer to :ref:`GPU Operator with KubeVirt` or
   :ref:`NVIDIA GPU Operator with OpenShift Virtualization`.
 
 * Added support for CRI-0 v1.26 with Red Hat Enterprise Linux 8.7
