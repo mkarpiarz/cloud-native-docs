@@ -53,6 +53,11 @@ New Features
   Refer to :ref:`GPU Operator with KubeVirt` or
   :ref:`NVIDIA GPU Operator with OpenShift Virtualization`.
 
+* Added support for running the Operator with Microsoft Azure Kubernetes Service (AKS).
+  You must use an AKS image with a preinstalled NVIDIA GPU driver and a preinstalled
+  NVIDIA Container Toolkit.
+  Refer to :doc:`microsoft-aks` for more information.
+
 * Added support for CRI-0 v1.26 with Red Hat Enterprise Linux 8.7
   and support for CRI-0 v1.27 with Ubuntu 20.04.
 

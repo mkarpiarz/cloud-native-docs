@@ -10,3 +10,5 @@ AKS images include a preinstalled NVIDIA GPU Driver and preinstalled NVIDIA Cont
 The images that are available in AKS always include a preinstalled NVIDIA GPU driver
 After you start your Azure AKS cluster, you are ready to install the NVIDIA GPU Operator.
    GPU Operator with Azure AKS <microsoft-aks.rst>
+* Added support for running the Operator with Microsoft Azure Kubernetes Service (AKS).
+  You must use an AKS image with a preinstalled NVIDIA GPU driver and a preinstalled
