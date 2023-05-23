@@ -58,6 +58,8 @@ New Features
   NVIDIA Container Toolkit.
   Refer to :doc:`microsoft-aks` for more information.
 
+* Added support for VMWare vSphere 8.0 U1 with Tanzu.
+
 * Added support for CRI-0 v1.26 with Red Hat Enterprise Linux 8.7
   and support for CRI-0 v1.27 with Ubuntu 20.04.
 
@@ -85,6 +87,35 @@ Fixed issues
   .. code-block:: output
 
      {"level":"error","ts":1681889507.829097,"msg":"Reconciler error","controller":"clusterpolicy-controller","object":{"name":"cluster-policy"},"namespace":"","name":"cluster-policy","reconcileID":"c5d55183-3ce9-4376-9d20-e3d53dc441cb","error":"ERROR: failed to transform the Driver Toolkit Container: could not find the 'openshift-driver-toolkit-ctr' container"}
+
+
+Known Limitations
+------------------
+
+* If you cordon a node while the GPU driver upgrade process is already in progress,
+  the Operator uncordons the node and upgrades the driver on the node.
+  You can determine if an upgrade is in progress by checking the node label
+  ``nvidia.com/gpu-driver-upgrade-state != upgrade-done``.
+* Using NVIDIA vGPU on bare metal nodes and NVSwitch is not supported.
+* When installing the Operator on Amazon EKS and using Kubernetes versions lower than
+  ``1.25``, specify the ``--set psp.enabled=true`` Helm argument because EKS enables
+  pod security policy (PSP).
+  If you use Kubernetes version ``1.25`` or higher, do not specify the ``psp.enabled``
+  argument so that the default value, ``false``, is used.
+* Ubuntu 18.04 is scheduled to reach end of standard support in May of 2023.
+  When Ubuntu transitions it to end of life (EOL), the NVIDIA GPU Operator and
+  related projects plan to cease building containers for 18.04 and to
+  cease providing support.
+* All worker nodes within the Kubernetes cluster must use the same operating system version.
+* NVIDIA GPUDirect Storage (GDS) is not supported with secure boot enabled systems.
+* Driver Toolkit images are broken with Red Hat OpenShift version ``4.11.12`` and require cluster-level entitlements to be enabled
+  in this case for the driver installation to succeed.
+* The NVIDIA GPU Operator can only be used to deploy a single NVIDIA GPU Driver type and version. The NVIDIA vGPU and Data Center GPU Driver cannot be used within the same cluster.
+* The ``nouveau`` driver must be blacklisted when using NVIDIA vGPU.
+  Otherwise the driver fails to initialize the GPU with the error ``Failed to enable MSI-X`` in the system journal logs.
+  Additionally, all GPU operator pods become stuck in the ``Init`` state.
+* When using RHEL 8 with Kubernetes, SELinux must be enabled (either in permissive or enforcing mode) for use with the GPU Operator.
+  Additionally, network-restricted environments are not supported.
 
 
 23.3.1

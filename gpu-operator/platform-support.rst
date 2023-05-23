@@ -228,7 +228,7 @@ The GPU Operator has been validated in the following scenarios:
        * - Ubuntu 20.04 LTS
          - 1.21---1.27
          -
-         - 7.0 U3c, 8.0
+         - 7.0 U3c, 8.0 U1
          - | 1.21, 1.22, 1.23,
            | 1.24, 1.25
          -
@@ -331,7 +331,7 @@ The GPU Operator has been validated in the following scenarios:
        * - Ubuntu 20.04 LTS
          - 1.21--1.27
          -
-         - 7.0 U3c, 8.0
+         - 7.0 U3c, 8.0 U1
          - | 1.21, 1.22, 1.23,
            | 1.24, 1.25
 
@@ -409,7 +409,7 @@ The latest version of NVIDIA AI Enterprise supports the following scenarios:
          - | 1.21, 1.22, 1,23
            | 1.24, 1.25
          -
-         - 7.0 U3c, 8.0
+         - 7.0 U3c, 8.0 U1
 
        * - Ubuntu 22.04 LTS
          - | 1.21, 1.22, 1,23
@@ -441,7 +441,7 @@ The latest version of NVIDIA AI Enterprise supports the following scenarios:
          - | 1.21, 1.22, 1,23
            | 1.24, 1.25
          -
-         - 7.0 U3c, 8.0
+         - 7.0 U3c, 8.0 U1
 
        * - Ubuntu 22.04 LTS
          - | 1.21, 1.22, 1,23
