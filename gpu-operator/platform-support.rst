@@ -486,31 +486,6 @@ you must set the ``DisableMDEVConfiguration`` feature gate.
 Refer to :ref:`GPU Operator with KubeVirt` or :ref:`NVIDIA GPU Operator with OpenShift Virtualization`.
 
 
-.. FIXME, remove
-  .. list-table::
-     :header-rows: 1
-     :stub-columns: 1
-
-     * - | Operating
-         | System
-       - Kubernetes
-       - | Red Hat
-         | OpenShift
-         | Virtualization
-
-     * - Ubuntu 20.04 LTS
-       - 1.21---1.27
-       -
-
-     * - Ubuntu 22.04 LTS
-       - 1.21---1.27
-       -
-
-     * - Red Hat Core OS
-       -
-       - 4.11, 4.12, 4.13
-
-
 Support for GPUDirect RDMA
 --------------------------
 
