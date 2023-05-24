@@ -78,7 +78,7 @@ Prerequisites
 
 * `Install the OpenShift Virtualization Operator <https://docs.openshift.com/container-platform/latest/virt/install/installing-virt-cli.html>`_.
 * `Install the virtctl client <https://docs.openshift.com/container-platform/latest/virt/install/virt-enabling-virtctl.html>`_.
-* For OpenShift Virtualization 4.12 and 4.13, set the ``DisableMDEVConfiguration`` feature gate:
+* Starting with OpenShift Virtualization 4.12.3 and 4.13.0, set the ``DisableMDEVConfiguration`` feature gate:
 
   .. code-block:: console
 

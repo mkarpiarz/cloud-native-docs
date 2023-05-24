@@ -48,8 +48,8 @@ New Features
   on the platform support page.
 
 * Added support for KubeVirt v0.59 and Red Hat OpenShift Virtualization 4.13.
-  You must perform a workaround by adding the ``DisableMDEVConfiguration``
-  feature gate to the configuration.
+  Starting with KubeVirt versions v0.58.2 and v0.59.1 and OpenShift Virtualization 4.12.3 and 4.13.0,
+  you must set the ``DisableMDEVConfiguration`` feature gate to use NVIDIA vGPU.
   Refer to :ref:`GPU Operator with KubeVirt` or
   :ref:`NVIDIA GPU Operator with OpenShift Virtualization`.
 
@@ -96,6 +96,8 @@ Known Limitations
   the Operator uncordons the node and upgrades the driver on the node.
   You can determine if an upgrade is in progress by checking the node label
   ``nvidia.com/gpu-driver-upgrade-state != upgrade-done``.
+* NVIDIA vGPU is incompatible with KubeVirt v0.58.0, v0.58.1, and v0.59.0, as well
+  as OpenShift Virtualization 4.12.0---4.12.2.
 * Using NVIDIA vGPU on bare metal nodes and NVSwitch is not supported.
 * When installing the Operator on Amazon EKS and using Kubernetes versions lower than
   ``1.25``, specify the ``--set psp.enabled=true`` Helm argument because EKS enables

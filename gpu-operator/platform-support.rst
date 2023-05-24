@@ -459,34 +459,57 @@ The latest version of NVIDIA AI Enterprise supports the following scenarios:
 
    |ocp_csp_support|
 
-Support for KubeVirt
---------------------
+Support for KubeVirt and OpenShift Virtualization
+-------------------------------------------------
 
-KubeVirt v0.36.0 is supported with the following operating systems and Kubernetes versions.
+Red Hat OpenShift Virtualization is based on KubeVirt.
 
-.. list-table::
-   :header-rows: 1
-   :stub-columns: 1
+================    ===========   =============   =========    =============    ========
+Operating System    Kubernetes           KubeVirt              OpenShift Virtualization
+----------------    -----------   -------------------------    -------------------------
+\                   \             | GPU           vGPU         | GPU            vGPU
+                                  | Passthrough                | Passthrough
+================    ===========   =============   =========    =============    ========
+Ubuntu 20.04 LTS    1.21---1.27   0.36+           0.59.1+
+Ubuntu 22.04 LTS    1.21---1.27   0.36+           0.59.1+
+Red Hat Core OS                                                4.11, 4.12,      4.13
+                                                               4.13
+================    ===========   =============   =========    =============    ========
 
-   * - | Operating
-       | System
-     - Kubernetes
-     - | Red Hat
-       | OpenShift
+You can run GPU passthrough and NVIDIA vGPU in the same cluster as long as you use
+a software version that meets both requirements.
 
-   * - Ubuntu 20.04 LTS
-     - | 1.21, 1.22, 1,23
-       | 1.24, 1.25, 1.26
-     -
+NVIDIA vGPU is incompatible with KubeVirt v0.58.0, v0.58.1, and v0.59.0, as well
+as OpenShift Virtualization 4.12.0---4.12.2.
+Starting with KubeVirt v0.58.2 and v0.59.1, and OpenShift Virtualization 4.12.3 and 4.13,
+you must set the ``DisableMDEVConfiguration`` feature gate.
+Refer to :ref:`GPU Operator with KubeVirt` or :ref:`NVIDIA GPU Operator with OpenShift Virtualization`.
 
-   * - Ubuntu 22.04 LTS
-     - | 1.21, 1.22, 1,23
-       | 1.24, 1.25, 1.26
-     -
 
-   * - Red Hat Core OS
-     -
-     - 4.11, 4.13
+.. FIXME, remove
+  .. list-table::
+     :header-rows: 1
+     :stub-columns: 1
+
+     * - | Operating
+         | System
+       - Kubernetes
+       - | Red Hat
+         | OpenShift
+         | Virtualization
+
+     * - Ubuntu 20.04 LTS
+       - 1.21---1.27
+       -
+
+     * - Ubuntu 22.04 LTS
+       - 1.21---1.27
+       -
+
+     * - Red Hat Core OS
+       -
+       - 4.11, 4.12, 4.13
+
 
 Support for GPUDirect RDMA
 --------------------------

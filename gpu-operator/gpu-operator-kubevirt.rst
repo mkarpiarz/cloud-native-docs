@@ -72,7 +72,7 @@ Prerequisites
 
 * KubeVirt is installed in the cluster.
 
-* For KubeVirt v0.58 and v0.59, set the ``DisableMDEVConfiguration`` feature gate:
+* Starting with KubeVirt v0.58.2 and v0.59.1, set the ``DisableMDEVConfiguration`` feature gate:
 
   .. code-block:: console
 
