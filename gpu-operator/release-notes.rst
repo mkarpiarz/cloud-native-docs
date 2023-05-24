@@ -39,7 +39,7 @@ See the :ref:`GPU Operator Component Matrix` for a list of components included i
 New Features
 ------------
 
-* Added support for Kubernetes v1.27 with Ubuntu 20.04 and 22.04.
+* Added support for Kubernetes v1.27.
   Refer to :ref:`Supported Operating Systems and Kubernetes Platforms`
   on the platform support page.
 
