@@ -44,8 +44,9 @@ AKS images include a preinstalled NVIDIA GPU Driver and preinstalled NVIDIA Cont
 Using the default configuration, without the Operator, has the following limitations:
 
 * Metrics are not collected or reported with NVIDIA DCGM Exporter.
-* Validation of the container runtime is manual rather than automatic with the Operator.
-* FIXME
+* Validating the container runtime is manual rather than automatic with the Operator.
+* Multi-Instance GPU (MIG) profiles must be set when you create the node pool and you
+  cannot change the profile at run time.
 
 If these limitations are acceptable to you, refer to
 `Use GPUs for compute-intensive workloads on Azure Kubernetes Services <https://learn.microsoft.com/en-us/azure/aks/gpu-cluster>`_
@@ -72,7 +73,7 @@ After you start your Azure AKS cluster, you are ready to install the NVIDIA GPU 
 When you install the Operator, you must prevent the Operator from automatically
 deploying NVIDIA Driver Containers and the NVIDIA Container Toolkit:
 
--  Install the Operator without the driver containers and toolkit:
+#. Install the Operator without the driver containers and toolkit:
 
    .. code-block:: console
 
@@ -95,10 +96,25 @@ deploying NVIDIA Driver Containers and the NVIDIA Container Toolkit:
       REVISION: 1
       TEST SUITE: None
 
+   The Operator requires several minutes to install.
+
+#. Confirm that the Operator is installed and ran the CUDA validation container to completion:
+
+   .. code-block:: console
+
+      $ kubectl get pods -n gpu-operator -l app=nvidia-cuda-validator
+
+   *Example Output*
+
+   .. code-block:: output
+
+      NAME                          READY   STATUS      RESTARTS   AGE
+      nvidia-cuda-validator-bpvkt   0/1     Completed   0          3m56s
+
 
 **********
 Next Steps
 **********
 
 * Refer to :ref:`Running Sample GPU Applications`
-  to validate the installation.
+  for an example of running workloads on NVIDIA GPUs.
