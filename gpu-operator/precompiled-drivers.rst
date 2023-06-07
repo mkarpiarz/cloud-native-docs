@@ -124,7 +124,7 @@ Specify the ``--set driver.usePrecompiled=true`` and ``--set driver.version=<dri
         -n gpu-operator --create-namespace \
         nvidia/gpu-operator \
         --set driver.usePrecompiled=true \
-        --set driver.version=<driver-branch>
+        --set driver.version="<driver-branch>"
     
 Specify a value like ``525`` for ``<driver-branch>``.
 Refer to :ref:`Chart Customization Options` for information about other installation options.
