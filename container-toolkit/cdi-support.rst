@@ -95,3 +95,35 @@ The CDI specification also contains references to individual GPUs or MIG devices
         $ podman run --rm --device nvidia.com/gpu=gpu0 --device nvidia.com/gpu=mig1:0 ubuntu nvidia-smi -L
 
 Where the full GPU with index 0 and the first MIG device on GPU 1 is requested. The output should show only the UUIDs of the requested devices.
+
+Using CDI in non-CDI-enabled runtimes
+=====================================
+
+In order to support runtimes which do not natively support CDI, the NVIDIA Container Runtime can be configured in a ``cdi`` mode.
+In this mode, the NVIDIA Container Runtime will not inject the NVIDIA Container Runtime Hook into the incoming OCI runtime specification, but instead
+perform the injection of the requested CDI devices itself.
+
+The mode can be toggled by updating the ``nvidia-container-runtime.mode`` option in the NVIDIA Container Runtime config to ``"cdi"``.
+
+Running the following command should do this on most systems:
+
+    .. code-block:: console
+
+        $ sed -i 's/mode = "auto"/mode = "cdi"/g' /etc/nvidia-container-runtime/config.toml
+
+When CDI mode is enabled in the NVIDIA Container Runtime, the devices specified in the ``NVIDIA_VISIBLE_DEVICES`` environment variable are treated as CDI device IDs.
+If these are not fully-qualified CDI device names, a CDI device kind is prepended to the specified ID. If these are specified as fully-qualified CDI device names, they are used as-is.
+
+The default CDI class that is used as a prefix is ``nvidia.com/gpu``. This can be changed by setting the ``nvidia-container-runtime.modes.cdi.default-kind`` option in the NVIDIA Container Runtime config.
+
+Using Docker as an example of a non-CDI-enabled runtime, the following command should now use CDI to inject the requested devices into the container:
+
+    .. code-block:: console
+
+        $ docker run --rm -ti --runtime=nvidia -e NVIDIA_VISIBLE_DEVICES=all ubuntu nvidia-smi -L
+
+Note that this assumes that the CDI specifications have been generated for all available NVIDIA GPUs using the ``nvidia-ctk cdi generate`` command, and the NVIDIA Container Runtime is configured as
+a runtime for Docker.
+
+Note that using the NVIDIA Container Runtime Hook is not supported in CDI mode, and as such specifying the ``--gpus`` flag on the Docker command line in addition to the ``--runtime`` in this case
+results in an error.
