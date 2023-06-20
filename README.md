@@ -7,12 +7,12 @@ The product documentation portal can be found at: https://docs.nvidia.com/datace
 
 ## Building the Container
 
-This step is optional.
+This step is optional if your only goal is to build the documentation.
 As an alternative to building the container, you can run `docker pull registry.gitlab.com/nvidia/cloud-native/cnt-docs:0.1.0`.
 
 Refer to <https://gitlab.com/nvidia/cloud-native/cnt-docs/container_registry> to find the most recent tag.
 
-If you change the `Dockerfile`, build the container.
+If you change the `Dockerfile`, update `CONTAINER_RELEASE_IMAGE` in the `gitlab-ci.yml` file to the new tag and build the container.
 Use the `Dockerfile` in the repository (under the `docker` directory) to generate the custom doc build container.
 
 1. Build the container:
@@ -44,13 +44,16 @@ Use the `Dockerfile` in the repository (under the `docker` directory) to generat
    ./repo docs -p gpu-operator
    ```
 
+   You can determine the docsets by viewing the `[repo_docs.projects.<docset-name>]` tables in the `repo.toml` file.
+
 The resulting HTML pages are located in the `_build/docs/.../latest/` directory of your repository clone.
 
 More information about the `repo docs` command is available from
 <http://omniverse-docs.s3-website-us-east-1.amazonaws.com/repo_docs/0.20.3/index.html>.
 
-Additionally, the Gitlab CI for this project builds the documentation on every merge request and push to the default branch.
-The under-development documentation from the default branch is available at <https://nvidia.gitlab.io/cloud-native/cnt-docs/review/latest/>.
+Additionally, the Gitlab CI for this project builds the documentation on every merge into the default branch (`master`).
+The documentation from the current default branch (`master`) is available at <https://nvidia.gitlab.io/cloud-native/cnt-docs/review/latest/>.
+Documentation in the default branch is under development and unstable.
 
 ## Releasing Documentation
 
@@ -58,35 +61,44 @@ The under-development documentation from the default branch is available at <htt
 
 1. Update the version in `repo.toml`:
 
-   ```toml
-   [repo_docs.projects.container-toolkit]
-   docs_root = "${root}/container-toolkit"
-   project = "container-toolkit"
-   name = "NVIDIA Container Toolkit"
-   version = "<new-version>"
-   copyright_start = 2020
+   ```diff
+   diff --git a/repo.toml b/repo.toml
+   index e7cd8db..e091d62 100644
+   --- a/repo.toml
+   +++ b/repo.toml
+   @@ -51,7 +51,7 @@ sphinx_conf_py_extra = """
+    docs_root = "${root}/container-toolkit"
+    project = "container-toolkit"
+    name = "NVIDIA Container Toolkit"
+   -version = "1.13.1"
+   +version = "NEW_VERSION"
+    copyright_start = 2020
    ```
 
 1. Update the version in `<component-name>/versions.json`:
 
-   ```json
-   {
-    "latest": "1.13.1",
-    "versions":
-    [
-        {
-            "version": "1.13.1"
-        },
-        {
-            "version": "1.12.1"
-        }
-    ]
-   }
+   ```diff
+   diff --git a/container-toolkit/versions.json b/container-toolkit/versions.json
+   index 334338a..b15af73 100644
+   --- a/container-toolkit/versions.json
+   +++ b/container-toolkit/versions.json
+   @@ -1,7 +1,10 @@
+    {
+   -    "latest": "1.13.1",
+   +    "latest": "NEW_VERSION",
+     "versions":
+        [
+   +        {
+   +            "version": "NEW_VERSION"
+   +        },
+            {
+                "version": "1.13.1"
+            },
    ```
 
-   These values control the menu at the bottom of the TOC and whether readers
-   receive the banner warning about the latest version when readers view a page
-   from an older release.
+   These values control the menu at the bottom of the table of contents and
+   whether pages show a warning banner when readers view an older release.
+   The warning banner directs readers to the latest version.
 
    We can prune the list to the six most-recent releases.
    The documentation for the older releases is not removed, readers are just
@@ -94,23 +106,14 @@ The under-development documentation from the default branch is available at <htt
 
 ### Special Branch Naming
 
-Pushes to the default branch do not publish documentation on docs.nvidia.com.
+Changes to the default branch are not published on docs.nvidia.com.
 
-Pushes to specially-named branches publish documentation to docs.nvidia.com.
+Only the changes in the specially-named branches are published to docs.nvidia.com.
 
-Develop your work in a feature branch, open a merge request, and then merge to the default branch.
+1. Make changes in a feature branch and merge the changes to the default branch.
+   Include `/latest` in your commit message on its own line.
 
-> **Important**: When you are confident that you are ready to publish from your commit,
-> include `/latest` in your commit message on its own line.
-> This line signals to CI that you want the documentation to update the latest
-> documentation in addition to create a versioned directory.
-
-At release time, create a branch from your commit---the commit with the `/latest` comment---and
-name the branch according to the following pattern:
-
-   ```text
-   <component-name>-v<version>
-   ```
+1. Create a specially-named branch from your commit with the following naming pattern: `<component-name>-v<version>`.
 
    *Example*
 
@@ -118,9 +121,19 @@ name the branch according to the following pattern:
    gpu-operator-v23.3.1
    ```
 
+1. Push the specially-named branch to the repository.
+
 Push the branch to the repository and CI builds the documentation in that branch---currently for all software components.
 However, only the documentation for the `component-name` and specified version is updated on the web.
+If the commit message includes `/latest` on its own line, then the documentation for the latest URL is also updated.
 
+*Example*
+
+<https://docs.nvidia.com/datacenter/cloud-native/gpu-operator/latest/>
+
+If the commit message does not include `/latest`, then only the documentation in the versioned URL is updated:
+
+<https://docs.nvidia.com/datacenter/cloud-native/gpu-operator/23.3.1/index.html>
 
 ## License and Contributing
 
