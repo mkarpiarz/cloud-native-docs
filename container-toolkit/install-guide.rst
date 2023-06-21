@@ -134,7 +134,8 @@ The list of prerequisites for running NVIDIA Container Toolkit is described belo
 Container Device Interface (CDI) Support
 ****************************************
 
-.. include:: cdi-support.rst
+.. include:: cdi-support.md
+   :parser: myst_parser.sphinx_
 
 
 ********************
