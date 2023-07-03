@@ -82,7 +82,7 @@ build_image_int:
 .build_rules:
   rules:
     - if: ($CI_PIPELINE_SOURCE == "push" && $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH) || $CI_PIPELINE_SOURCE == "merge_request_event"
-    - if: $CI_COMMIT_BRANCH =~ /-v[0-9]/
+    - if: $CI_COMMIT_REF_NAME =~ /-v[0-9]/
 
 build_ext:
   extends: .build
@@ -137,13 +137,22 @@ publish_docs:
     - type/docker
   variables:
     HTML_PATH: "_build/docs"
+    FORCE_LATEST: "true"
   script:
   - echo "Pushing docs live to https://docs.nvidia.com/datacenter/cloud-native"
-  - export VERSION="${CI_COMMIT_BRANCH//*v}"
-  - export DOCSET="${CI_COMMIT_BRANCH%-v*}"
   - |+
-    if [[ "${CI_COMMIT_MESSAGE}" =~ $'\n/latest\n' ]]; then
-      export FORCE_LATEST=true
+    if [[ "${CI_COMMIT_REF_NAME}" =~ (.+)-v([0-9]+\.[0-9]+\.[0-9]+) ]]; then
+      export DOCSET="${BASH_REMATCH[1]}"
+      export VERSION="${BASH_REMATCH[2]}"
+    fi
+  - |+
+    if [ -z "${DOCSET}" ] || [ -z "${VERSION}" ]; then
+      echo "Failed to determine the docset or version."
+      exit 1
+    fi
+  - |+
+    if [[ "${CI_COMMIT_MESSAGE}" =~ $'\n/not-latest\n' ]]; then
+      export FORCE_LATEST=false
     fi
   - echo "Publishing docs for ${DOCSET} and version ${VERSION}"
   - pushd "${HTML_PATH}/${DOCSET}/latest"
@@ -155,4 +164,4 @@ publish_docs:
   dependencies:
     - build_int
   rules:
-    - if: $CI_COMMIT_BRANCH =~ /-v[0-9]/ && ($CI_PIPELINE_SOURCE == "push" || $CI_PIPELINE_SOURCE == "web" ) && $INTERNAL
+    - if: $CI_COMMIT_REF_NAME =~ /-v[0-9]/ && ($CI_PIPELINE_SOURCE == "push" || $CI_PIPELINE_SOURCE == "web" ) && $INTERNAL

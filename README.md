@@ -104,16 +104,13 @@ Documentation in the default branch is under development and unstable.
    The documentation for the older releases is not removed, readers are just
    less likely to browse the older releases.
 
-### Special Branch Naming
+### Tagging and Special Branch Naming
 
 Changes to the default branch are not published on docs.nvidia.com.
 
-Only the changes in the specially-named branches are published to docs.nvidia.com.
+Only tags or specially-named branches are published to docs.nvidia.com.
 
-1. Make changes in a feature branch and merge the changes to the default branch.
-   Include `/latest` in your commit message on its own line.
-
-1. Create a specially-named branch from your commit with the following naming pattern: `<component-name>-v<version>`.
+1. Create a tag or specially-named branch from your commit with the following naming pattern: `<component-name>-v<version>`.
 
    *Example*
 
@@ -121,17 +118,20 @@ Only the changes in the specially-named branches are published to docs.nvidia.co
    gpu-operator-v23.3.1
    ```
 
-1. Push the specially-named branch to the repository.
+   The first three fields of the semantic version are used.
+   For a "do over," push a tag like `gpu-operator-v23.3.1.1`.
 
-Push the branch to the repository and CI builds the documentation in that branch---currently for all software components.
+1. Push the tag or specially-named branch to the repository.
+
+CI builds the documentation for the Git ref---currently for all software components.
 However, only the documentation for the `component-name` and specified version is updated on the web.
-If the commit message includes `/latest` on its own line, then the documentation for the latest URL is also updated.
+By default, the documentation for the "latest" URL is updated.
 
 *Example*
 
 <https://docs.nvidia.com/datacenter/cloud-native/gpu-operator/latest/>
 
-If the commit message does not include `/latest`, then only the documentation in the versioned URL is updated:
+If the commit message includes `/not-latest`, then only the documentation in the versioned URL is updated:
 
 <https://docs.nvidia.com/datacenter/cloud-native/gpu-operator/23.3.1/index.html>
 
