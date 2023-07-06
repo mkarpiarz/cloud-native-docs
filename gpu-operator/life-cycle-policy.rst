@@ -110,7 +110,9 @@ Refer to :ref:`Upgrading the GPU Operator` for more information.
           | `515.86.01 <https://docs.nvidia.com/datacenter/tesla/tesla-release-notes-515-86-01/index.html>`_,
           | `510.108.03 <https://docs.nvidia.com/datacenter/tesla/tesla-release-notes-510-108-03/index.html>`_,
           | `470.199.02 <https://docs.nvidia.com/datacenter/tesla/tesla-release-notes-470-199-02/index.html>`_,
-          | `450.248.02 <https://docs.nvidia.com/datacenter/tesla/tesla-release-notes-450-248-02/index.html>`_
+          | `470.161.03 <https://docs.nvidia.com/datacenter/tesla/tesla-release-notes-470-161-03/index.html>`_,
+          | `450.248.02 <https://docs.nvidia.com/datacenter/tesla/tesla-release-notes-450-248-02/index.html>`_,
+          | `450.216.04 <https://docs.nvidia.com/datacenter/tesla/tesla-release-notes-450-216-04/index.html>`_
         - `v0.6.1 <https://ngc.nvidia.com/catalog/containers/nvidia:cloud-native:k8s-driver-manager>`_
         - `1.13.0 <https://github.com/NVIDIA/nvidia-container-toolkit/releases>`_
         - `0.14.0 <https://github.com/NVIDIA/k8s-device-plugin/releases>`_
@@ -169,7 +171,9 @@ Refer to :ref:`Upgrading the GPU Operator` for more information.
           | `515.86.01 <https://docs.nvidia.com/datacenter/tesla/tesla-release-notes-515-86-01/index.html>`_,
           | `510.108.03 <https://docs.nvidia.com/datacenter/tesla/tesla-release-notes-510-108-03/index.html>`_,
           | `470.199.02 <https://docs.nvidia.com/datacenter/tesla/tesla-release-notes-470-199-02/index.html>`_,
-          | `450.248.02 <https://docs.nvidia.com/datacenter/tesla/tesla-release-notes-450-248-02/index.html>`_
+          | `470.161.03 <https://docs.nvidia.com/datacenter/tesla/tesla-release-notes-470-161-03/index.html>`_,
+          | `450.248.02 <https://docs.nvidia.com/datacenter/tesla/tesla-release-notes-450-248-02/index.html>`_,
+          | `450.216.04 <https://docs.nvidia.com/datacenter/tesla/tesla-release-notes-450-216-04/index.html>`_
         - `v0.6.0 <https://ngc.nvidia.com/catalog/containers/nvidia:cloud-native:k8s-driver-manager>`_
         - `1.11.0 <https://github.com/NVIDIA/nvidia-container-toolkit/releases>`_
         - `0.13.0 <https://github.com/NVIDIA/k8s-device-plugin/releases>`_
