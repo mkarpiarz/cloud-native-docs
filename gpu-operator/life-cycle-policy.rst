@@ -167,6 +167,7 @@ Refer to :ref:`Upgrading the GPU Operator` for more information.
       * - v22.9.2
         - | `535.54.03 <https://docs.nvidia.com/datacenter/tesla/tesla-release-notes-535-54-03/index.html>`_ (recommended),
           | `525.125.06 <https://docs.nvidia.com/datacenter/tesla/tesla-release-notes-525-125-06/index.html>`_,
+          | `525.85.12 <https://docs.nvidia.com/datacenter/tesla/tesla-release-notes-525-85-12/index.html>`_,
           | `525.60.13 <https://docs.nvidia.com/datacenter/tesla/tesla-release-notes-525-60-13/index.html>`_ (default),
           | `515.86.01 <https://docs.nvidia.com/datacenter/tesla/tesla-release-notes-515-86-01/index.html>`_,
           | `510.108.03 <https://docs.nvidia.com/datacenter/tesla/tesla-release-notes-510-108-03/index.html>`_,
