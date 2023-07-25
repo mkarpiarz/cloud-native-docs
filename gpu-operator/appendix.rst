@@ -40,6 +40,8 @@ Advanced Configurations
 
    Confidential Containers <confidential-containers.rst>
 
+   sandbox-containers-kata.rst
+
    GPU Operator with Amazon EKS <amazon-eks.rst>
 
    GPU Operator with Azure AKS <microsoft-aks.rst>
