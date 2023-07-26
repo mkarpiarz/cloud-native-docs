@@ -139,6 +139,11 @@ The following options are available when using the Helm chart. These options can
      - Depends on the version of the Operator. See the Component Matrix
        for more information on supported drivers.
 
+   * - ``kataManager.enabled``
+     - The GPU Operator deploys NVIDIA Kata Manager when this field is ``true``.
+       Refer to :doc:`sandbox-containers-kata.rst` for more information.
+     - ``false``
+
    * - ``mig.strategy``
      - Controls the strategy to be used with MIG on supported NVIDIA GPUs. Options
        are either ``mixed`` or ``single``.
