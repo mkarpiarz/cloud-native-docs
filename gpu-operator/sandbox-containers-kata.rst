@@ -16,9 +16,9 @@
 
 .. headings (h1/h2/h3/h4/h5) are # * = -
 
-##########################################
-Support for Sandboxed Containers with Kata
-##########################################
+#################################
+GPU Operator with Kata Containers
+#################################
 
 .. contents::
    :depth: 2
@@ -26,9 +26,9 @@ Support for Sandboxed Containers with Kata
    :backlinks: none
 
 
-************************************
-About Sandboxed Containers with Kata
-************************************
+***************************************
+About the Operator with Kata Containers
+***************************************
 
 .. note:: Technology Preview features are not supported in production environments
           and are not functionally complete.
@@ -48,13 +48,13 @@ Hardware virtualization and a separate kernel provide improved workload isolatio
 in comparison with traditional containers.
 
 The NVIDIA GPU Operator works with the Kata container runtime.
-Kata uses QEMU to provide a lightweight virtual machine with a single purpose--to run a Kubernetes pod.
+Kata uses a hypervisor, like QEMU, to provide a lightweight virtual machine with a single purpose--to run a Kubernetes pod.
 
 The following diagram shows the software components that Kubernetes uses to run a sandboxed container.
 
 .. mermaid::
    :caption: Software Components with Kata Container Runtime
-   :alt: Logical diagram of software components between Kublet and containers when using sandboxed containers.
+   :alt: Logical diagram of software components between Kubelet and containers when using sandboxed containers.
 
    flowchart LR
      a[Kubelet] --> b[CRI] --> c[Kata\nRuntime] --> d[Lightweight\nQEMU VM] --> e[Lightweight\nGuest OS] --> f[Pod] --> g[Container]
@@ -76,10 +76,43 @@ These artifacts are downloaded from the NVIDIA container registry, nvcr.io, on e
 The manager also configures each worker node with a runtime class, ``kata-qemu-nvidia-gpu``,
 and configures containerd for the runtime class.
 
+NVIDIA Kata Manager Custom Resource
+===================================
 
-********************************
-Benefits of Sandboxed Containers
-********************************
+The following part of the cluster policy shows the fields related to the manager:
+
+.. code-block:: yaml
+
+   kataManager:
+     enabled: true
+     config:
+       artifactsDir: /opt/nvidia-gpu-operator/artifacts/runtimeclasses
+       runtimeClasses:
+       - artifacts:
+           pullSecret: ""
+           url: nvcr.io/nvidia/cloud-native/kata-gpu-artifacts:ubuntu22.04-525
+         name: kata-qemu-nvidia-gpu
+         nodeSelector: {}
+       - artifacts:
+           pullSecret: ""
+           url: nvcr.io/nvidia/cloud-native/kata-gpu-artifacts:ubuntu22.04-535-snp
+         name: kata-qemu-nvidia-gpu-snp
+         nodeSelector: {}
+     repository: nvcr.io/nvidia/cloud-native
+     image: k8s-kata-manager
+     version: v0.1.0
+     imagePullPolicy: IfNotPresent
+     imagePullSecrets: []
+     env: []
+     resources: {}
+
+The ``kata-qemu-nvidia-gpu-snp`` runtime class is used with confidential computing
+and is installed by default.
+
+
+*********************************
+Benefits of Using Kata Containers
+*********************************
 
 The primary benefits of sandbox containers are as follows:
 
@@ -100,17 +133,16 @@ Limitations and Restrictions
   Multi-GPU passthrough and vGPU are not supported.
 
 * Support is limited to initial installation and configuration only.
-  Upgrade and configuration of existing clusters for sandboxed containers is not supported.
+  Upgrade and configuration of existing clusters for Kata Containers is not supported.
 
-* Support for sandbox containers is limited to the implementation described on this page.
+* Support for Kata Containers is limited to the implementation described on this page.
   The Operator does not support Red Hat OpenShift sandbox containers.
-  FIXME: True? Or we do, just not as described on this page?
 
 * Uninstalling the GPU Operator or the NVIDIA Kata Manager does not remove the files
   that the manager downloads and installs in the ``/opt/nvidia-gpu-operator/artifacts/runtimeclasses/kata-qemu-nvidia-gpu/``
   directory on the worker nodes.
 
-* FIXME: Naive question...can customers run their own kernels or initial RAM disks? (Would that matter?)
+* NVIDIA supports the Operator and Kata Containers with the containerd runtime only.
 
 
 *************
@@ -206,7 +238,7 @@ Perform the following steps to install and verify the Confidential Containers Op
 
       ccruntime.confidentialcontainers.org/ccruntime-sample created
 
-   Wait a few minutes for the Operator to create the base runtime classes.
+   Wait approximately 10 minutes for the Operator to create the base runtime classes.
 
 #. (Optional) View the runtime classes:
 
@@ -244,16 +276,34 @@ Perform the following steps to install the Operator for use with sandboxed conta
       $ helm repo add nvidia https://helm.ngc.nvidia.com/nvidia \
          && helm repo update
 
-#. Specify at least the following sandbox workloads and Kata manager options when you install the Operator:
+#. (Optional) To limit which nodes run Kata Containers, instead of cluster-wide configuration, label the nodes:
 
    .. code-block:: console
 
-      $ helm install --wait --generate-name \
-         -n gpu-operator --create-namespace \
-         nvidia/gpu-operator \
-         --set sandboxWorkloads.enabled=true \
-         --set sandboxWorkloads.defaultWorkload="vm-passthrough" \
-         --set kataManager.enabled=true
+      $ kubectl label node <node-name> nvidia.com/gpu.workload.config=vm-passthrough
+
+#. Specify at least the following sandbox workloads and Kata manager options when you install the Operator.
+
+   * Limit Kata Containers to labelled nodes only:
+
+     .. code-block:: console
+
+        $ helm install --wait --generate-name \
+           -n gpu-operator --create-namespace \
+           nvidia/gpu-operator \
+           --set sandboxWorkloads.enabled=true \
+           --set kataManager.enabled=true
+
+   * Run Kata Containers cluster-wide on all nodes:
+
+     .. code-block:: console
+
+        $ helm install --wait --generate-name \
+           -n gpu-operator --create-namespace \
+           nvidia/gpu-operator \
+           --set sandboxWorkloads.enabled=true \
+           --set sandboxWorkloads.defaultWorkload=vm-passthrough \
+           --set kataManager.enabled=true
 
    *Example Output*
 
@@ -285,8 +335,6 @@ Verification
       gpu-operator-57bf5d5769-nb98z                                1/1     Running     0          6m21s
       gpu-operator-node-feature-discovery-master-b44f595bf-5sjxg   1/1     Running     0          6m21s
       gpu-operator-node-feature-discovery-worker-lwhdr             1/1     Running     0          6m21s
-      nvidia-cuda-validator-4kk9w                                  0/1     Completed   0          4m12s
-      nvidia-device-plugin-validator-nztmv                         0/1     Completed   0          4m1s
       nvidia-kata-manager-bw5mb                                    1/1     Running     0          3m36s
       nvidia-sandbox-device-plugin-daemonset-cr4s6                 1/1     Running     0          2m37s
       nvidia-sandbox-validator-9wjm4                               1/1     Running     0          2m37s
@@ -301,18 +349,20 @@ Verification
    *Example Output*
 
    .. code-block:: output
-      :emphasize-lines: 6
+      :emphasize-lines: 6, 7
 
-      NAME                   HANDLER                AGE
-      kata                   kata                   48m
-      kata-clh               kata-clh               48m
-      kata-clh-tdx           kata-clh-tdx           48m
-      kata-qemu              kata-qemu              48m
-      kata-qemu-nvidia-gpu   kata-qemu-nvidia-gpu   10m
-      kata-qemu-sev          kata-qemu-sev          48m
-      kata-qemu-snp          kata-qemu-snp          48m
-      kata-qemu-tdx          kata-qemu-tdx          48m
-      nvidia                 nvidia                 10m
+      NAME                       HANDLER                    AGE
+      kata                       kata                       37m
+      kata-clh                   kata-clh                   37m
+      kata-clh-tdx               kata-clh-tdx               37m
+      kata-qemu                  kata-qemu                  37m
+      kata-qemu-nvidia-gpu       kata-qemu-nvidia-gpu       96s
+      kata-qemu-nvidia-gpu-snp   kata-qemu-nvidia-gpu-snp   96s
+      kata-qemu-sev              kata-qemu-sev              37m
+      kata-qemu-snp              kata-qemu-snp              37m
+      kata-qemu-tdx              kata-qemu-tdx              37m
+      nvidia                     nvidia                     97s
+
 
 #. (Optional) If you have host access to the worker node, you can perform the following steps:
 
@@ -345,13 +395,14 @@ Verification
          configuration-nvidia-gpu-qemu.toml
          kata-ubuntu-jammy-nvidia-gpu.initrd
          vmlinuz-5.xx.x-xxx-nvidia-gpu
+         ...
 
 
 *********************
 Run a Sample Workload
 *********************
 
-A pod specification for a sandboxed container requires the following:
+A pod specification for a Kata Container requires the following:
 
 * Specify a Kata runtime class.
 
@@ -383,6 +434,8 @@ A pod specification for a sandboxed container requires the following:
       kind: Pod
       metadata:
         name: cuda-vectoradd-kata
+        annotations:
+          cdi.k8s.io/gpu: "nvidia.com/pgpu=0"
       spec:
         runtimeClassName: kata-qemu-nvidia-gpu
         restartPolicy: OnFailure
@@ -415,3 +468,39 @@ A pod specification for a sandboxed container requires the following:
       Copy output data from the CUDA device to the host memory
       Test PASSED
       Done
+
+#. Delete the pod:
+
+   .. code-block:: console
+
+      $ kubectl delete -f cuda-vectoradd-kata.yaml
+
+
+About the Pod Annotation
+========================
+
+The ``cdi.k8s.io/gpu: "nvidia.com/pgpu=0"`` annotation is used when the pod sandbox is created.
+The annotation ensures that the virtual machine created by the Kata runtime is created with
+the correct PCIe topology so that GPU passthrough succeeds.
+
+The annotation refers to a Container Device Interface (CDI) device, ``nvidia.com/pgpu=0``.
+The ``pgpu`` indicates passthrough GPU and the ``0`` indicates the device index.
+The index is defined by the order that the GPUs are enumerated on the PCI bus.
+The index does not correlate to a CUDA index.
+
+The NVIDIA Kata Manager creates a CDI specification on the GPU nodes.
+The file includes a device entry for each passthrough device.
+
+In the following sample ``/var/run/cdi/nvidia.com-pgpu.yaml`` file shows one GPU that
+is bound to the VFIO PCI driver:
+
+.. code-block:: yaml
+
+   cdiVersion: 0.5.0
+   containerEdits: {}
+   devices:
+   - containerEdits:
+       deviceNodes:
+       - path: /dev/vfio/10
+   name: "0"
+   kind: nvidia.com/pgpu
