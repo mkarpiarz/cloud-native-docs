@@ -16,6 +16,13 @@
 
 .. headings (h1/h2/h3/h4/h5) are # * = -
 
+..
+   lingo:
+
+   It's "Kata Containers" when referring to the software component.
+   It's "Kata container" when it's a container that uses the Kata Containers runtime.
+   Treat our operands as proper nouns and use title case.
+
 #################################
 GPU Operator with Kata Containers
 #################################
@@ -36,13 +43,13 @@ About the Operator with Kata Containers
           enabling customers to test functionality and provide feedback during the development process.
           These releases may not have any documentation, and testing is limited.
 
-Sandboxed containers are similar, but subtly different from traditional containers such as a Docker container.
+Kata Containers are similar, but subtly different from traditional containers such as a Docker container.
 
 A traditional container packages software for user-space isolation from the host,
 but the container runs on the host and shares the operating system kernel with the host.
 Sharing the operating system kernel is a potential vulnerability.
 
-A sandboxed container runs in a virtual machine on the host.
+A Kata container runs in a virtual machine on the host.
 The virtual machine has a separate operating system and operating system kernel.
 Hardware virtualization and a separate kernel provide improved workload isolation
 in comparison with traditional containers.
@@ -50,34 +57,34 @@ in comparison with traditional containers.
 The NVIDIA GPU Operator works with the Kata container runtime.
 Kata uses a hypervisor, like QEMU, to provide a lightweight virtual machine with a single purpose--to run a Kubernetes pod.
 
-The following diagram shows the software components that Kubernetes uses to run a sandboxed container.
+The following diagram shows the software components that Kubernetes uses to run a Kata container.
 
 .. mermaid::
    :caption: Software Components with Kata Container Runtime
-   :alt: Logical diagram of software components between Kubelet and containers when using sandboxed containers.
+   :alt: Logical diagram of software components between Kubelet and containers when using Kata Containers.
 
    flowchart LR
      a[Kubelet] --> b[CRI] --> c[Kata\nRuntime] --> d[Lightweight\nQEMU VM] --> e[Lightweight\nGuest OS] --> f[Pod] --> g[Container]
 
 
-NVIDIA supports sandboxed containers with Kata by installing the Confidential Containers Operator.
+NVIDIA supports Kata Containers by installing the Confidential Containers Operator.
 The Confidential Containers Operator installs the Kata runtime and QEMU.
 
 About NVIDIA Kata Manager
 =========================
 
-When you configure the GPU Operator for sandbox workloads with Kata, the Operator
+When you configure the GPU Operator for Kata Containers, the Operator
 deploys NVIDIA Kata Manager as an operand.
 
 The manager downloads an NVIDIA optimized Linux kernel image and initial RAM disk that
-provides the lightweight operating system for the virtual machines run in QEMU.
+provides the lightweight operating system for the virtual machines that run in QEMU.
 These artifacts are downloaded from the NVIDIA container registry, nvcr.io, on each worker node.
 
 The manager also configures each worker node with a runtime class, ``kata-qemu-nvidia-gpu``,
 and configures containerd for the runtime class.
 
-NVIDIA Kata Manager Custom Resource
-===================================
+NVIDIA Kata Manager Configuration
+=================================
 
 The following part of the cluster policy shows the fields related to the manager:
 
@@ -114,7 +121,7 @@ and is installed by default.
 Benefits of Using Kata Containers
 *********************************
 
-The primary benefits of sandbox containers are as follows:
+The primary benefits of Kata Containers are as follows:
 
 * Running untrusted workloads in a container.
   The virtual machine provides a layer of defense against the untrusted code.
@@ -157,7 +164,7 @@ Prerequisites
   If the output from running ``ls /sys/kernel/iommu_groups`` includes ``0``, ``1``, and so on,
   then your host is configured for IOMMU.
 
-  If the host is not configured or you are unsure, add the ``intel_iommu=on`` Linux kernel command-line argument.
+  If a host is not configured or you are unsure, add the ``intel_iommu=on`` Linux kernel command-line argument.
   For most Linux distributions, you add the argument to the ``/etc/default/grub`` file:
 
   .. code-block:: text
@@ -173,10 +180,15 @@ Prerequisites
 
 * You have a Kubernetes cluster and you have cluster administrator privileges.
 
+.. start-install-coco-operator
 
 ********************************************
 Install the Confidential Containers Operator
 ********************************************
+
+The following steps summarize the installation procedure described in the
+`installation <https://github.com/confidential-containers/operator/blob/main/docs/INSTALL.md>`__
+document from the Confidential Containers Operator repository on GitHub.
 
 Perform the following steps to install and verify the Confidential Containers Operator:
 
@@ -259,6 +271,7 @@ Perform the following steps to install and verify the Confidential Containers Op
       kata-qemu-snp   kata-qemu-snp   13m
       kata-qemu-tdx   kata-qemu-tdx   13m
 
+.. end-install-coco-operator
 
 *******************************
 Install the NVIDIA GPU Operator
@@ -267,7 +280,7 @@ Install the NVIDIA GPU Operator
 Procedure
 =========
 
-Perform the following steps to install the Operator for use with sandboxed containers:
+Perform the following steps to install the Operator for use with Kata Containers:
 
 #. Add and update the NVIDIA Helm repository:
 
@@ -282,7 +295,7 @@ Perform the following steps to install the Operator for use with sandboxed conta
 
       $ kubectl label node <node-name> nvidia.com/gpu.workload.config=vm-passthrough
 
-#. Specify at least the following sandbox workloads and Kata manager options when you install the Operator.
+#. Specify at least the following sandbox workloads and Kata Manager options when you install the Operator.
 
    * Limit Kata Containers to labelled nodes only:
 
@@ -320,7 +333,7 @@ Perform the following steps to install the Operator for use with sandboxed conta
 Verification
 ============
 
-#. Verify that the Kata manager and VFIO manager operands are running:
+#. Verify that the Kata Manager and VFIO Manager operands are running:
 
    .. code-block:: console
 
@@ -329,7 +342,7 @@ Verification
    *Example Output*
 
    .. code-block:: output
-      :emphasize-lines: 7,10
+      :emphasize-lines: 5,8
 
       NAME                                                         READY   STATUS      RESTARTS   AGE
       gpu-operator-57bf5d5769-nb98z                                1/1     Running     0          6m21s
@@ -340,7 +353,7 @@ Verification
       nvidia-sandbox-validator-9wjm4                               1/1     Running     0          2m37s
       nvidia-vfio-manager-vg4wp                                    1/1     Running     0          3m36s
 
-#. Verify that the ``kata-qemu-nvidia-gpu`` runtime class is available:
+#. Verify that the ``kata-qemu-nvidia-gpu`` and ``kata-qemu-nvidia-gpu-snp`` runtime classes are available:
 
    .. code-block:: console
 
@@ -366,7 +379,7 @@ Verification
 
 #. (Optional) If you have host access to the worker node, you can perform the following steps:
 
-   #. Confirm that the host uses the ``vfio-pci`` kernel module for GPUs:
+   #. Confirm that the host uses the ``vfio-pci`` device driver for GPUs:
 
       .. code-block:: console
 
@@ -382,7 +395,7 @@ Verification
                  Kernel driver in use: vfio-pci
                  Kernel modules: nvidiafb, nouveau
 
-   #. Confirm that Kata manager installed the ``kata-qemu-nvidia-gpu`` runtime class files:
+   #. Confirm that Kata Manager installed the ``kata-qemu-nvidia-gpu`` runtime class files:
 
       .. code-block:: console
 
@@ -402,7 +415,7 @@ Verification
 Run a Sample Workload
 *********************
 
-A pod specification for a Kata Container requires the following:
+A pod specification for a Kata container requires the following:
 
 * Specify a Kata runtime class.
 
@@ -428,7 +441,7 @@ A pod specification for a Kata Container requires the following:
 #. Create a file, such as ``cuda-vectoradd-kata.yaml``, like the following example:
 
    .. code-block:: yaml
-      :emphasize-lines: 6, 13
+      :emphasize-lines: 6,8,15
 
       apiVersion: v1
       kind: Pod
