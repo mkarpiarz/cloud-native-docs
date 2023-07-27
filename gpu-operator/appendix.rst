@@ -38,9 +38,9 @@ Advanced Configurations
 
    Container Device Interface Support <cdi.rst>
 
-   Confidential Containers <confidential-containers.rst>
+   gpu-operator-kata.rst
 
-   sandbox-containers-kata.rst
+   Confidential Containers <confidential-containers.rst>
 
    GPU Operator with Amazon EKS <amazon-eks.rst>
 
