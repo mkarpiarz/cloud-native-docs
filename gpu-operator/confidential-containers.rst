@@ -74,36 +74,43 @@ simplify managing the software required for confidential computing and deploying
 
   The Operator manages installing and deploying a runtime that can run Kata Containers with QEMU.
 
-* Kata Containers
+* NVIDIA Kata Manager for Kubernetes
 
-  GPU Operator deploys NVIDIA Kata Manager, ``nvidia-kata-manager``, to manage the ``kata-qemu-nvidia-gpu-snp`` runtime class
-  and to configure containerd to use the runtime class.
+  GPU Operator deploys NVIDIA Kata Manager for Kubernetes, ``k8s-kata-manager``.
+  The manager performs the following functions:
 
-* NVIDIA Confidential Computing Manager
+  * Manages the ``kata-qemu-nvidia-gpu-snp`` runtime class.
+  * Configures containerd to use the runtime class.
+  * Manages the Kata artifacts such as Linux kernel images and initial RAM disks.
 
-  GPU Operator deploys the manager, ``nvidia-cc-manager``, to set the confidential computing mode on the NVIDIA GPUs.
+* NVIDIA Confidential Computing Manager for Kubernetes
+
+  GPU Operator deploys the manager, ``k8s-cc-manager``, to set the confidential computing mode on the NVIDIA GPUs.
 
 * Node Feature Discovery (NFD)
 
   When you install NVIDIA GPU Operator for confidential computing, you must specify the ``nfd.nodefeaturerules=true`` option.
   This option directs the Operator to install node feature rules that detect CPU security features and the NVIDIA GPU hardware.
+  You can confirm the rules are installed by running ``kubectl get nodefeaturerules nvidia-nfd-node-featurerules``.
+
   On nodes that have an NVIDIA Hopper family GPU and either Intel TDX or AMD SEV-SNP, NFD adds labels to the node
   such as ``"feature.node.kubernetes.io/cpu-security.sev.snp.enabled": "true"`` and ``"nvidia.com/cc.capable": "true"``.
   NVIDIA GPU Operator only deploys the operands for confidential containers on nodes that have the
   ``"nvidia.com/cc.capable": "true"`` label.
 
 
-
 About NVIDIA Confidential Computing Manager
 ===========================================
 
-You can set the confidential computing mode of the NVIDIA GPUs by modifying the cluster policy.
+You can set the default confidential computing mode of the NVIDIA GPUs by setting the
+``ccManager.defaultMode=<on|off>`` option.
+You can set this option when you install NVIDIA GPU Operator or afterward by modifying the cluster policy.
 
 When you change the mode, the manager performs the following actions:
 
 * Evicts the other GPU Operator operands from the node.
 
-  However, the manager does not drain other workloads.
+  However, the manager does not drain user workloads.
   You must make sure ensure that no user workloads running on the node before you change the mode.
 
 * Unbinds the GPU from the VFIO PCI device driver.
@@ -130,7 +137,7 @@ The following part of the cluster policy shows the fields related to the manager
      imagePullSecrets: []
      env:
        - name: CC_CAPABLE_DEVICE_IDS
-         value: "0x2339,0x2331,0x2330,0x2324,0x2322,0x233d"
+         value: "0x2331,0x2322"
      resources: {}
 
 
@@ -295,7 +302,15 @@ Perform the following steps to install the Operator for use with confidential co
       $ helm repo add nvidia https://helm.ngc.nvidia.com/nvidia \
          && helm repo update
 
-#. Specify at least the following options when you install the Operator:
+#. (Optional) To limit which nodes run Kata Containers, instead of cluster-wide configuration, label the nodes:
+
+   .. code-block:: console
+
+      $ kubectl label node <node-name> nvidia.com/gpu.workload.config=vm-passthrough
+
+#. Specify at least the following sandbox workloads and Kata Manager options when you install the Operator.
+
+   * Limit confidential containers to labelled nodes only:
 
      .. code-block:: console
 
@@ -303,10 +318,22 @@ Perform the following steps to install the Operator for use with confidential co
            -n gpu-operator --create-namespace \
            nvidia/gpu-operator \
            --set sandboxWorkloads.enabled=true \
-           --set sandboxWorkloads.defaultWorkload=vm-passthrough \
            --set kataManager.enabled=true \
            --set ccManager.enabled=true \
            --set nfd.nodefeaturerules=true
+
+   * Run confidential containers cluster-wide on all nodes:
+
+     .. code-block:: console
+
+        $ helm install --wait --generate-name \
+           -n gpu-operator --create-namespace \
+           nvidia/gpu-operator \
+           --set sandboxWorkloads.enabled=true \
+           --set kataManager.enabled=true \
+           --set ccManager.enabled=true \
+           --set nfd.nodefeaturerules=true \
+           --set sandboxWorkloads.defaultWorkload=vm-passthrough
 
    *Example Output*
 
@@ -390,15 +417,18 @@ Verification
 
       .. code-block:: console
 
-         $ ls -1 /opt/nvidia-gpu-operator/artifacts/runtimeclasses/kata-qemu-nvidia-gpu/
+         $ ls -1 /opt/nvidia-gpu-operator/artifacts/runtimeclasses/kata-qemu-nvidia-gpu-snp/
 
       *Example Output*
 
       .. code-block:: output
 
-         configuration-nvidia-gpu-qemu.toml
+         5.19.2.tar.gz
+         config-5.19.2-109-nvidia-gpu-sev
+         configuration-kata-qemu-nvidia-gpu-snp.toml
+         dpkg.sbom.list
          kata-ubuntu-jammy-nvidia-gpu.initrd
-         vmlinuz-5.xx.x-xxx-nvidia-gpu
+         vmlinuz-5.19.2-109-nvidia-gpu-sev
          ...
 
 
@@ -481,7 +511,7 @@ A pod specification for a confidential computing requires the following:
 #. Create a file, such as ``cuda-vectoradd-coco.yaml``, like the following example:
 
    .. code-block:: yaml
-      :emphasize-lines: 6, 13
+      :emphasize-lines: 6, 15
 
       apiVersion: v1
       kind: Pod
@@ -527,3 +557,151 @@ A pod specification for a confidential computing requires the following:
    .. code-block:: console
 
       $ kubectl delete -f cuda-vectoradd-coco.yaml
+
+
+Refer to :ref:`About the Pod Annotation` for information about the pod annotation.
+
+
+***********
+Attestation
+***********
+
+About Attestation
+=================
+
+With confidential computing, *attestation* is the assertion that the hardware and
+software is trustworthy.
+
+The Kata runtime uses the ``kata-ubuntu-jammy-nvidia-gpu.initrd`` initial RAM disk file
+that NVIDIA Kata Manager for Kubernetes downloaded from NVIDIA Container Registry, nvcr.io.
+The initial RAM disk includes an NVIDIA verifier tool that runs as a container guest pre-start hook.
+When the attestation is successful, the GPU is set in the ``Ready`` state.
+On failure, containers still start, but CUDA applications fail with a ``system not initialized`` error.
+
+
+Accessing the VM of a Scheduled Confidential Container
+======================================================
+
+You do not need to access the VM as a routine task.
+Accessing the VM is useful for troubleshooting or performing lower-level verification about the confidential computing mode.
+
+This task requires host access to the Kubernetes node that is running the container.
+
+#. Determine the Kubernetes node and pod sandbox ID:
+
+   .. code-block:: console
+
+      $ kubectl describe pod <pod-name>
+
+#. Access the Kubernetes node.
+   Using secure shell is typical.
+
+#. Access the Kata runtime:
+
+   .. code-block:: console
+
+      $ kata-runtime exec <pod-sandbox-ID>
+
+Viewing the GPU Ready State
+===========================
+
+After you access the VM, you can run ``nvidia-smi conf-compute -grs``:
+
+.. code-block:: output
+
+   Confidential Compute GPUs Ready state: ready
+
+
+Viewing the Confidential Computing Mode
+=======================================
+
+After you access the VM, you can run ``nvidia-smi conf-compute -f`` to view the mode:
+
+.. code-block:: output
+
+   CC status: ON
+
+
+Verify Attestation is Successful
+================================
+
+After you access the VM, you can run the following command to verify that attestation is successful:
+
+.. code-block:: console
+
+   # python3 /gpu-attestation/nv_attestation_sdk/tests/SmallGPUTest.py
+
+*Example Output*
+
+.. code-block:: output
+
+   [SmallGPUTest] node name : thisNode1
+   [['LOCAL_GPU_CLAIMS', <Devices.GPU: 2>, <Environment.LOCAL: 2>, '', '', '']]
+   [SmallGPUTest] call attest() - expecting True
+   Number of GPUs available : 1
+   -----------------------------------
+   Fetching GPU 0 information from GPU driver.
+   VERIFYING GPU : 0
+         Driver version fetched : 535.86.05
+         VBIOS version fetched : 96.00.5e.00.01
+         Validating GPU certificate chains.
+                GPU attestation report certificate chain validation successful.
+                       The certificate chain revocation status verification successful.
+         Authenticating attestation report
+                The nonce in the SPDM GET MEASUREMENT request message is matching with the generated nonce.
+                Driver version fetched from the attestation report : 535.86.05
+                VBIOS version fetched from the attestation report : 96.00.5e.00.01
+                Attestation report signature verification successful.
+                Attestation report verification successful.
+         Authenticating the RIMs.
+                Authenticating Driver RIM
+                        Schema validation passed.
+                        driver RIM certificate chain verification successful.
+                        The certificate chain revocation status verification successful.
+                        driver RIM signature verification successful.
+                        Driver RIM verification successful
+               Authenticating VBIOS RIM.
+                        RIM Schema validation passed.
+                        vbios RIM certificate chain verification successful.
+                        The certificate chain revocation status verification successful.
+                        vbios RIM signature verification successful.
+                        VBIOS RIM verification successful
+         Comparing measurements (runtime vs golden)
+                        The runtime measurements are matching with the golden measurements.
+                GPU is in the expected state.
+         GPU 0 verified successfully.
+         attestation result: True
+         claims list:: {'x-nv-gpu-availability': True, 'x-nv-gpu-attestation-report-available': ...
+         True
+         [SmallGPUTest] token : [["JWT", "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.e..."],
+            {"LOCAL_GPU_CLAIMS": "eyJhbGciOiJIUzI1NiIsInR5cCI..."}]
+         [SmallGPUTest] call validate_token() - expecting True
+         True
+
+
+Troubleshooting
+===============
+
+To troubleshoot attestation failures, access the VM and view the logs in the ``/var/log/`` directory.
+
+To troubleshoot virtual machine failures, access the Kubernetes node and view logs with the ``journalctl`` command.
+
+.. code-block:: console
+
+   $ sudo journalctl -u containerd -f
+
+The Kata agent communicates with the virtcontainers library on the host by using the VSOCK port.
+The communication is recorded to the system journal on the host.
+When you view the logs, refer to logs with a ``kata`` or ``virtcontainers`` prefix.
+
+
+********************
+Additional Resources
+********************
+
+* NVIDIA Confidential Computing documentation is available at https://docs.nvidia.com/confidential-computing.
+
+* NVIDIA Verifier Tool is part of the nvTrust project.
+  Refer to https://github.com/NVIDIA/nvtrust/tree/main/guest_tools/gpu_verifiers/local_gpu_verifier
+  for more information.
+
