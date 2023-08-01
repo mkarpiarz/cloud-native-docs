@@ -184,6 +184,8 @@ Node A receives the following software components:
 - ``NVIDIA Container Toolkit`` -- to ensure that containers can access GPUs.
 - ``NVIDIA Device Plugin for Kubernetes`` -- to discover and advertise GPU resources to kubelet.
 - ``NVIDIA DGCM and DGCM Exporter`` -- to monitor GPUs.
+- ``NVIDIA MIG Manager for Kubernetes`` -- to manage MIG-capable GPUs.
+- ``NVIDIA GPU Feature Discovery`` -- to detect NVIDIA GPUs and label worker nodes.
 
 Node B receives the following software components:
 
@@ -229,6 +231,27 @@ Prerequisites
   Reboot the host after configuring the bootloader.
 
 * You have a Kubernetes cluster and you have cluster administrator privileges.
+
+
+******************************************
+Overview of Installation and Configuration
+******************************************
+
+Installing and configuring your cluster to support the NVIDIA GPU Operator with confidential containers is as follows:
+
+#. Label the worker nodes that you want to use with confidential containers.
+
+   This step ensures that you can continue to run traditional container workloads and vGPU workloads on some nodes in your cluster.
+
+#. Install the Confidential Containers Operator.
+
+   This step installs the Operator and also the Kata Containers runtime that NVIDIA uses for confidential containers.
+
+#. Install the NVIDIA GPU Operator.
+
+   You install the Operator and specify options to deploy the operands that are required for confidential containers.
+
+After installation, you can change the confidential computing mode and run a sample workload.
 
 
 **************************************
