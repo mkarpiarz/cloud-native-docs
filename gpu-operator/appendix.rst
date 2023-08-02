@@ -40,7 +40,7 @@ Advanced Configurations
 
    gpu-operator-kata.rst
 
-   Confidential Containers <confidential-containers.rst>
+   confidential-containers.rst
 
    GPU Operator with Amazon EKS <amazon-eks.rst>
 

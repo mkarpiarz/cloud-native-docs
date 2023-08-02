@@ -152,6 +152,36 @@ Limitations and Restrictions
 * NVIDIA supports the Operator and Kata Containers with the containerd runtime only.
 
 
+*******************************
+Cluster Topology Considerations
+*******************************
+
+You can configure all the worker nodes in your cluster for Kata Containers or you configure some
+nodes for Kata Containers and the others for traditional containers.
+Consider the following example.
+
+Node A is configured to run traditional containers.
+
+Node B is configured to run Kata Containers.
+
+Node A receives the following software components:
+
+- ``NVIDIA Driver Manager for Kubernetes`` -- to install the data-center driver.
+- ``NVIDIA Container Toolkit`` -- to ensure that containers can access GPUs.
+- ``NVIDIA Device Plugin for Kubernetes`` -- to discover and advertise GPU resources to kubelet.
+- ``NVIDIA DGCM and DGCM Exporter`` -- to monitor GPUs.
+- ``NVIDIA MIG Manager for Kubernetes`` -- to manage MIG-capable GPUs.
+- ``NVIDIA GPU Feature Discovery`` -- to detect NVIDIA GPUs and label worker nodes.
+
+Node B receives the following software components:
+
+- ``NVIDIA Kata Manager for Kubernetes`` -- to manage the NVIDIA artifacts such as the
+  NVIDIA optimized Linux kernel image and initial RAM disk.
+- ``NVIDIA Sandbox Device Plugin`` -- to discover and advertise the passthrough GPUs to kubelet.
+- ``NVIDIA VFIO Manager`` -- to load the vfio-pci device driver and bind it to all GPUs on the node.
+- ``Node Feature Discovery`` -- to detect CPU security features, NVIDIA GPUs, and label worker nodes.
+
+
 *************
 Prerequisites
 *************
@@ -180,98 +210,43 @@ Prerequisites
 
 * You have a Kubernetes cluster and you have cluster administrator privileges.
 
-.. start-install-coco-operator
 
-********************************************
-Install the Confidential Containers Operator
-********************************************
+******************************************
+Overview of Installation and Configuration
+******************************************
 
-The following steps summarize the installation procedure described in the
-`installation <https://github.com/confidential-containers/operator/blob/main/docs/INSTALL.md>`__
-document from the Confidential Containers Operator repository on GitHub.
+Installing and configuring your cluster to support the NVIDIA GPU Operator with Kata Containers is as follows:
 
-Perform the following steps to install and verify the Confidential Containers Operator:
+#. Label the worker nodes that you want to use with Kata Containers.
 
-#. Set the Operator version in an environment variable:
+   This step ensures that you can continue to run traditional container workloads and vGPU workloads on some nodes in your cluster.
 
-   .. code-block:: console
+#. Install the Confidential Containers Operator.
 
-      $ export VERSION=v0.7.0
+   This step installs the Operator and also the Kata Containers runtime that NVIDIA uses for Kata Containers.
 
-#. Install the Operator:
+#. Install the NVIDIA GPU Operator.
 
-   .. code-block:: console
+   You install the Operator and specify options to deploy the operands that are required for Kata Containers.
 
-      $ kubectl apply -k "github.com/confidential-containers/operator/config/release?ref=${VERSION}"
+After installation, you can run a sample workload.
 
-   *Example Output*
 
-   .. code-block:: output
+**************************************
+Label Nodes for Confidental Containers
+**************************************
 
-      namespace/confidential-containers-system created
-      customresourcedefinition.apiextensions.k8s.io/ccruntimes.confidentialcontainers.org created
-      serviceaccount/cc-operator-controller-manager created
-      role.rbac.authorization.k8s.io/cc-operator-leader-election-role created
-      clusterrole.rbac.authorization.k8s.io/cc-operator-manager-role created
-      clusterrole.rbac.authorization.k8s.io/cc-operator-metrics-reader created
-      clusterrole.rbac.authorization.k8s.io/cc-operator-proxy-role created
-      rolebinding.rbac.authorization.k8s.io/cc-operator-leader-election-rolebinding created
-      clusterrolebinding.rbac.authorization.k8s.io/cc-operator-manager-rolebinding created
-      clusterrolebinding.rbac.authorization.k8s.io/cc-operator-proxy-rolebinding created
-      configmap/cc-operator-manager-config created
-      service/cc-operator-controller-manager-metrics-service created
-      deployment.apps/cc-operator-controller-manager create
+> Label the nodes to run Kata Containers:
 
-#. (Optional) View the pods and services in the ``confidental-containers-system`` namespace:
+  .. code-block:: console
 
-   .. code-block:: console
+     $ kubectl label node <node-name> nvidia.com/gpu.workload.config=vm-passthrough
 
-      $ kubectl get pod,svc -n confidential-containers-system
 
-   *Example Output*
+.. include:: confidential-containers.rst
+   :start-after: start-install-coco-operator
+   :end-before: end-install-coco-operator
 
-   .. code-block:: output
-
-      NAME                                                 READY   STATUS    RESTARTS   AGE
-      pod/cc-operator-controller-manager-c98c4ff74-ksb4q   2/2     Running   0          2m59s
-
-      NAME                                                     TYPE        CLUSTER-IP      EXTERNAL-IP   PORT(S)    AGE
-      service/cc-operator-controller-manager-metrics-service   ClusterIP   10.98.221.141   <none>        8443/TCP   2m59s
-
-#. Install the sample Confidential Containers runtime:
-
-   .. code-block:: sample
-
-      $ kubectl apply -k "github.com/confidential-containers/operator/config/samples/ccruntime/default?ref=${VERSION}"
-
-   *Example Output*
-
-   .. code-block:: output
-
-      ccruntime.confidentialcontainers.org/ccruntime-sample created
-
-   Wait approximately 10 minutes for the Operator to create the base runtime classes.
-
-#. (Optional) View the runtime classes:
-
-   .. code-block:: console
-
-      $ kubectl get runtimeclass
-
-   *Example Output*
-
-   .. code-block:: output
-
-      NAME            HANDLER         AGE
-      kata            kata            13m
-      kata-clh        kata-clh        13m
-      kata-clh-tdx    kata-clh-tdx    13m
-      kata-qemu       kata-qemu       13m
-      kata-qemu-sev   kata-qemu-sev   13m
-      kata-qemu-snp   kata-qemu-snp   13m
-      kata-qemu-tdx   kata-qemu-tdx   13m
-
-.. end-install-coco-operator
 
 *******************************
 Install the NVIDIA GPU Operator
@@ -289,34 +264,15 @@ Perform the following steps to install the Operator for use with Kata Containers
       $ helm repo add nvidia https://helm.ngc.nvidia.com/nvidia \
          && helm repo update
 
-#. (Optional) To limit which nodes run Kata Containers, instead of cluster-wide configuration, label the nodes:
+#. Specify at least the following options when you install the Operator:
 
    .. code-block:: console
 
-      $ kubectl label node <node-name> nvidia.com/gpu.workload.config=vm-passthrough
-
-#. Specify at least the following sandbox workloads and Kata Manager options when you install the Operator.
-
-   * Limit Kata Containers to labelled nodes only:
-
-     .. code-block:: console
-
-        $ helm install --wait --generate-name \
-           -n gpu-operator --create-namespace \
-           nvidia/gpu-operator \
-           --set sandboxWorkloads.enabled=true \
-           --set kataManager.enabled=true
-
-   * Run Kata Containers cluster-wide on all nodes:
-
-     .. code-block:: console
-
-        $ helm install --wait --generate-name \
-           -n gpu-operator --create-namespace \
-           nvidia/gpu-operator \
-           --set sandboxWorkloads.enabled=true \
-           --set sandboxWorkloads.defaultWorkload=vm-passthrough \
-           --set kataManager.enabled=true
+      $ helm install --wait --generate-name \
+         -n gpu-operator --create-namespace \
+         nvidia/gpu-operator \
+         --set sandboxWorkloads.enabled=true \
+         --set kataManager.enabled=true
 
    *Example Output*
 
@@ -395,7 +351,7 @@ Verification
                  Kernel driver in use: vfio-pci
                  Kernel modules: nvidiafb, nouveau
 
-   #. Confirm that Kata Manager installed the ``kata-qemu-nvidia-gpu`` runtime class files:
+   #. Confirm that NVIDIA Kata Manager installed the ``kata-qemu-nvidia-gpu`` runtime class files:
 
       .. code-block:: console
 
