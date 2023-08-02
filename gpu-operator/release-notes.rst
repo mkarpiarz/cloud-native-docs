@@ -65,10 +65,6 @@ New Features
     * ``4g.47gb``
     * ``7g.94gb``
 
-  * For H100-96GB devices:
-
-    * ``4g.48gb``
-
 
 Improvements
 ------------
@@ -91,7 +87,7 @@ Improvements
      pod-security.kubernetes.io/warn=privileged
 
 * The Operator performs plugin validation when the Operator is installed or upgraded.
-  Previously, the plugin validation ran a workload that requires access to a GPU.
+  Previously, the plugin validation ran a workload pod that requires access to a GPU.
   On a busy node with the GPUs consumed by other workloads, the validation can falsely
   report failure because it was not scheduled.
   The plugin validation still confirms that GPUs are advertised to kubelet, but it no longer
@@ -109,15 +105,17 @@ Fixed issues
 
 * In previous releases, when you performed a GPU driver upgrade with the ``OnDelete`` strategy,
   the status reported in the ``cluster-policy`` instance of the ``ClusterPolicy`` object could indicate
-  ``Ready`` even though the driver daemon set has not completed the upgrade on all pods.
+  ``Ready`` even though the driver daemon set has not completed the upgrade of pods on all nodes.
   In this release, the status is reported as ``notReady`` until the upgrade is complete.
 
 
 Known Limitations
 ------------------
 
-* The GPU Driver container does not run on hosts that have the SEV-SNP CPU feature
-  because the the Operator does not support the Linux kernel.
+* The GPU Driver container does not run on hosts that have a custom kernel with the SEV-SNP CPU feature
+  because of the missing ``kernel-headers`` package within the container.
+  With a custom kernel, NVIDIA recommends pre-installing the NVIDIA drivers on the host if you want to
+  run traditional container workloads with NVIDIA GPUs.
 * If you cordon a node while the GPU driver upgrade process is already in progress,
   the Operator uncordons the node and upgrades the driver on the node.
   You can determine if an upgrade is in progress by checking the node label
