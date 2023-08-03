@@ -111,6 +111,7 @@ About NVIDIA Confidential Computing Manager
 
 You can set the default confidential computing mode of the NVIDIA GPUs by setting the
 ``ccManager.defaultMode=<on|off>`` option.
+The default value is ``off``.
 You can set this option when you install NVIDIA GPU Operator or afterward by modifying the
 ``cluster-policy`` instance of the ``ClusterPolicy`` object.
 
@@ -185,6 +186,7 @@ Node A receives the following software components:
 - ``NVIDIA Device Plugin for Kubernetes`` -- to discover and advertise GPU resources to kubelet.
 - ``NVIDIA DGCM and DGCM Exporter`` -- to monitor GPUs.
 - ``NVIDIA MIG Manager for Kubernetes`` -- to manage MIG-capable GPUs.
+- ``Node Feature Discovery`` -- to detect CPU, kernel, and host features and label worker nodes.
 - ``NVIDIA GPU Feature Discovery`` -- to detect NVIDIA GPUs and label worker nodes.
 
 Node B receives the following software components:
@@ -243,7 +245,7 @@ Installing and configuring your cluster to support the NVIDIA GPU Operator with 
 
 #. Label the worker nodes that you want to use with confidential containers.
 
-   This step ensures that you can continue to run traditional container workloads and vGPU workloads on some nodes in your cluster.
+   This step ensures that you can continue to run traditional container workloads with GPU or vGPU workloads on some nodes in your cluster.
 
 #. Install the Confidential Containers Operator.
 
@@ -541,6 +543,7 @@ To set a node-level mode, apply the ``nvidia.com/cc.mode=<on|off|devtools>`` lab
 
    $ kubectl label node <node-name> nvidia.com/cc.mode=on --overwrite
 
+The mode that you set on a node has higher precedence than the cluster-wide default mode.
 
 Verifying a Mode Change
 =======================

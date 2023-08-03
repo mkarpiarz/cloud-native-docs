@@ -67,8 +67,10 @@ The following diagram shows the software components that Kubernetes uses to run 
      a[Kubelet] --> b[CRI] --> c[Kata\nRuntime] --> d[Lightweight\nQEMU VM] --> e[Lightweight\nGuest OS] --> f[Pod] --> g[Container]
 
 
-NVIDIA supports Kata Containers by installing the Confidential Containers Operator.
-The Confidential Containers Operator installs the Kata runtime and QEMU.
+NVIDIA supports Kata Containers by using the Confidential Containers Operator to install the Kata runtime and QEMU.
+Even though the Operator isn't used for confidential computing in this configuration, the Operator
+simplifies the installation of the Kata runtime.
+
 
 About NVIDIA Kata Manager
 =========================
@@ -113,8 +115,10 @@ The following part of the cluster policy shows the fields related to the manager
      env: []
      resources: {}
 
-The ``kata-qemu-nvidia-gpu-snp`` runtime class is used with confidential computing
-and is installed by default.
+The ``kata-qemu-nvidia-gpu`` runtime class is used with Kata Containers.
+
+The ``kata-qemu-nvidia-gpu-snp`` runtime class is used with Confidential Containers
+and is installed by default even though it is not used with this configuration.
 
 
 *********************************
@@ -171,6 +175,7 @@ Node A receives the following software components:
 - ``NVIDIA Device Plugin for Kubernetes`` -- to discover and advertise GPU resources to kubelet.
 - ``NVIDIA DGCM and DGCM Exporter`` -- to monitor GPUs.
 - ``NVIDIA MIG Manager for Kubernetes`` -- to manage MIG-capable GPUs.
+- ``Node Feature Discovery`` -- to detect CPU, kernel, and host features and label worker nodes.
 - ``NVIDIA GPU Feature Discovery`` -- to detect NVIDIA GPUs and label worker nodes.
 
 Node B receives the following software components:
@@ -219,7 +224,7 @@ Installing and configuring your cluster to support the NVIDIA GPU Operator with 
 
 #. Label the worker nodes that you want to use with Kata Containers.
 
-   This step ensures that you can continue to run traditional container workloads and vGPU workloads on some nodes in your cluster.
+   This step ensures that you can continue to run traditional container workloads with GPU or vGPU workloads on some nodes in your cluster.
 
 #. Install the Confidential Containers Operator.
 
