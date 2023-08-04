@@ -360,7 +360,7 @@ Perform the following steps to install and verify the Confidential Containers Op
 
          ccruntime.confidentialcontainers.org/ccruntime-sample created
 
-   Wait approximately 10 minutes for the Operator to create the base runtime classes.
+   Wait a few minutes for the Operator to create the base runtime classes.
 
 #. (Optional) View the runtime classes:
 

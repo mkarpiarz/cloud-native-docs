@@ -416,9 +416,9 @@ A pod specification for a Kata container requires the following:
         containers:
         - name: cuda-vectoradd
           image: "nvcr.io/nvidia/k8s/cuda-sample:vectoradd-cuda11.7.1-ubuntu20.04"
-        resources:
-          limits:
-            "nvidia.com/GA102GL_A10": 1
+          resources:
+            limits:
+              "nvidia.com/GA102GL_A10": 1
 
 #. Create the pod:
 
