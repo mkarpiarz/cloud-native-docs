@@ -240,7 +240,7 @@ For installing on Secure Boot systems or using Precompiled modules refer to :doc
 Bare-metal/Passthrough with default configurations on Red Hat Enterprise Linux
 """""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
 
-In this scenario, use the NVIDIA Container Toolkit container that is built on UBI 8:
+In this scenario, use the NVIDIA Container Toolkit image that is built on UBI 8:
 
 .. code-block:: console
 
@@ -260,7 +260,7 @@ Additionally, network restricted environments are not supported.
 Bare-metal/Passthrough with default configurations on CentOS
 """"""""""""""""""""""""""""""""""""""""""""""""""""""""""""
 
-In this scenario, use the NVIDIA Container Toolkit container that is build on CentOS 7:
+In this scenario, use the NVIDIA Container Toolkit image that is build on CentOS:
 
 .. code-block:: console
 
@@ -269,12 +269,12 @@ In this scenario, use the NVIDIA Container Toolkit container that is build on Ce
         nvidia/gpu-operator \
         --set toolkit.version=1.13.0-centos7
 
-For CentOS 8 systems, use `toolkit.version=1.13.0-centos8`.
-Replace the ``1.13.0`` value in the preceding command with the version that is supported with the
-NVIDIA GPU Operator.
+For CentOS 8 systems, use the UBI 8 image: ``toolkit.version=1.13.0-ubi8``.
+
+Replace the ``1.13.0`` value in the preceding command with the version that is supported with the NVIDIA GPU Operator.
 Refer to the :ref:`GPU Operator Component Matrix` on the platform support page.
 You can also refer to the `tags <https://ngc.nvidia.com/catalog/containers/nvidia:k8s:container-toolkit/tags>`__
-for the NVIDIA Container Toolkit container from the NVIDIA NGC Catalog.
+for the NVIDIA Container Toolkit image from the NVIDIA NGC Catalog.
 
 ----
 
