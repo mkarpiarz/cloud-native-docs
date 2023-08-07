@@ -247,9 +247,9 @@ In this scenario, use the NVIDIA Container Toolkit image that is built on UBI 8:
    $ helm install --wait --generate-name \
         -n gpu-operator --create-namespace \
         nvidia/gpu-operator \
-        --set toolkit-version=1.13.0-ubi8
+        --set toolkit-version=1.13.4-ubi8
 
-Replace the ``1.13.0`` value in the preceding command with the version that is supported
+Replace the ``1.13.4`` value in the preceding command with the version that is supported
 with the NVIDIA GPU Operator.
 Refer to the :ref:`GPU Operator Component Matrix` on the platform support page.
 
@@ -267,11 +267,11 @@ In this scenario, use the NVIDIA Container Toolkit image that is build on CentOS
    $ helm install --wait --generate-name \
         -n gpu-operator --create-namespace \
         nvidia/gpu-operator \
-        --set toolkit.version=1.13.0-centos7
+        --set toolkit.version=1.13.4-centos7
 
-For CentOS 8 systems, use the UBI 8 image: ``toolkit.version=1.13.0-ubi8``.
+For CentOS 8 systems, use the UBI 8 image: ``toolkit.version=1.13.4-ubi8``.
 
-Replace the ``1.13.0`` value in the preceding command with the version that is supported with the NVIDIA GPU Operator.
+Replace the ``1.13.4`` value in the preceding command with the version that is supported with the NVIDIA GPU Operator.
 Refer to the :ref:`GPU Operator Component Matrix` on the platform support page.
 You can also refer to the `tags <https://ngc.nvidia.com/catalog/containers/nvidia:k8s:container-toolkit/tags>`__
 for the NVIDIA Container Toolkit image from the NVIDIA NGC Catalog.
