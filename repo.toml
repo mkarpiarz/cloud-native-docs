@@ -58,7 +58,7 @@ sphinx_conf_py_extra = """
       "nvidia-docker.html": "install-guide.html",
       "nvidia-podman.html": "install-guide.html",
       "runtime/*": "docker-specialized.html",
-      "user-guide.html": "index.html",
+      "user-guide.html": "install-guide.html",
     }
 """
 
