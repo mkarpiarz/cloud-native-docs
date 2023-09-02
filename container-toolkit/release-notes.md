@@ -10,6 +10,40 @@ This document describes the new features, improvements, fixed and known issues f
 
 ______________________________________________________________________
 
+## NVIDIA Container Toolkit 1.14
+
+This release of the NVIDIA Container Toolkit `v1.14` is a feature release.
+
+The following packages are included:
+
+- `libnvidia-container 1.14.0`
+- `nvidia-container-toolkit 1.14.0`
+- `nvidia-container-runtime 3.14.0`
+- `nvidia-docker2 2.14.0`
+
+   ```{note}
+   This is the last release that includes the `nvidia-container-runtime`
+   and `nvidia-docker2` packages.
+   All required functionality is included in the `nvidia-container-toolkit` package.
+   This toolkit package includes a utility to configure the Docker daemon to use the NVIDIA Container Runtime.
+   ```
+
+The following `container-toolkit` containers are included:
+
+- `nvcr.io/nvidia/k8s/container-toolkit:v1.14.0-centos7`
+- `nvcr.io/nvidia/k8s/container-toolkit:v1.14.0-ubi8`
+- `nvcr.io/nvidia/k8s/container-toolkit:v1.14.0-ubuntu20.04`
+
+### Fixes and Features
+
+- Improved support for the Container Device Interface (CDI) on Tegra-based systems.
+
+- Simplified the packaging and distribution of the toolkit.
+
+  Beginning with this release, one `.deb` package and one `.rpm` package are distributed.
+  These packages are compatible with all supported distributions.
+  This enhancement simplifies the installation process instead of releasing distributions-specific packages.
+
 ## NVIDIA Container Toolkit 1.13.5
 
 This release of the NVIDIA Container Toolkit `v1.13.5` is a bugfix release.
