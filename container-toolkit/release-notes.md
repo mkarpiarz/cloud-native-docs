@@ -44,6 +44,17 @@ The following `container-toolkit` containers are included:
   These packages are compatible with all supported distributions.
   This enhancement simplifies the installation process instead of releasing distributions-specific packages.
 
+#### specific to libnvidia-container
+- Added logic to generate the `nvc.h` header file automaticallty so that version does not need to be explicitly bumped.
+- Added the Shared Compiler Library, `libnvidia-gpucomp.so`, to the list of included compute libaries.
+- Added OpenSSL 3 support to the Encrypt / Decrypt library.
+
+#### specific to container-toolkit container images
+- Bumped the CUDA base image version to 12.2.0.
+- Aligned the environment variables used to configure container engines.
+- Removed installation of the `nvidia-experimental` runtime. This is superceded by the NVIDIA Container Runtime in CDI mode.
+- Set `NVIDIA_VISIBLE_DEVICES=void` to prevent injection of NVIDIA devices and drivers into the NVIDIA Container Toolkit container.
+
 ## NVIDIA Container Toolkit 1.13.5
 
 This release of the NVIDIA Container Toolkit `v1.13.5` is a bugfix release.
