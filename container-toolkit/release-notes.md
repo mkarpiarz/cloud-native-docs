@@ -28,11 +28,13 @@ The following `container-toolkit` containers are included:
 
 ### Fixes and Features
 
-* Fixed a bug where contents of `/etc/nvidia-container-runtime/config.toml` is ignored by the NVIDIA Container Runtime Hook. This means that settings such as `no-cgroups` or a logfile path are now respected.
+- Fixed a bug where the contents of `/etc/nvidia-container-runtime/config.toml` are ignored by the NVIDIA Container Runtime Hook.
+  This fix means that settings such as `no-cgroups` or a logfile path are now respected.
 
-#### Fixes and Feature in libnvidia-container
+#### Enhancements to libnvidia-container
 
-- Switched to using `libelf.so` from `elfutils-libelf-devel` on RPM-based. This is expected to be a build-only change.
+- Switched to using `libelf.so` from `elfutils-libelf-devel` on RPM-based systems.
+  This change is a build-only change.
 
 ## NVIDIA Container Toolkit 1.14.0
 
